@@ -92,7 +92,7 @@ class Node {
 	changeParent(parent) {
 		this.parent = parent;
 		if (parent !== null) {
-			parent.children.push(this);
+			parent.children.add(this);
 			this.changeRoot(parent.root);
 		} else {
 			this.changeRoot(this);
@@ -112,8 +112,14 @@ class Node {
 	 * Get the amoung of children this node has.
 	 * @returns {Number}
 	 */
-	childrenAmount() {
+	get childrenAmount() {
 		return this.children.size;
+	}
+
+	createChild(data, options) {
+		const node = new Node(this.system, data, options);
+		this.addChildren(node);
+		return node;
 	}
 
 	/**

@@ -1,7 +1,14 @@
 const eventify = require('ngraph.events');
 const newID = require('../Utils/id');
-const Node = require('./Node');
 const Edge = require('./Edge');
+
+// require('./Node) can't be called at the top:
+// https://stackoverflow.com/questions/29023320/resolving-circular-dependency-in-nodejs-model
+// Solution: require('./Node') inside each function that needs access to it.
+// Another solution would be to not use class syntax but function prototypes
+// That would work since Classes are technically just syntactic sugar
+// Problem with that is the difficult use of "this":
+// https://stackoverflow.com/a/20279485/13764271
 
 /**
  * @typedef {Object} systemOptions
@@ -18,9 +25,11 @@ class System {
 	 * @param {systemOptions} options Options for this system. Gets merged with the default options for systems.
 	 */
 	constructor(root, options) {
+		const Node = require('./Node');
 		this.id = newID();
 		this.options = Object.assign({}, defaultOpts, options);
-		this.root = root;
+		this.root = root instanceof Node ? root : new Node(this);
+		this.root.system = this;
 		this.edges = {
 			from: [],
 			to: [],
@@ -41,6 +50,7 @@ class System {
 	 * @returns {Set<System>}
 	 */
 	get systemsTo() {
+		const Node = require('./Node');
 		let systems = new Set();
 		this.edges.to.forEach((e) => {
 			if (e.target instanceof System) systems.add(e.target);
@@ -54,6 +64,7 @@ class System {
 	 * @returns {Set<System>}
 	 */
 	get systemsFrom() {
+		const Node = require('./Node');
 		let systems = new Set();
 		this.edges.from.forEach((e) => {
 			if (e.source instanceof System) systems.add(e.source);
@@ -82,9 +93,9 @@ class System {
 	 * @param {systemOptions | nodeOptions} options Options for both the root node and its system.
 	 * @returns {System} New System whose rot node has the specified data and options.
 	 */
-	static Node(data, options) {
-		return new System(new Node(data, options), options);
-	}
+	// static Node(data, options) {
+	// 	return new System(new Node(null, data, options), options);
+	// }
 
 	changeRoot(newRoot, addOldRootAsChild = false) {
 		newRoot.changeSystem(this);
@@ -123,18 +134,19 @@ class System {
 		parent.addChildren(node);
 		return this;
 	}
-	
-	forEachNode();
-	
-	mapNodes();
-	
-	removeNodes();
+
+	forEachNode() {}
+
+	mapNodes() {}
+
+	removeNodes() {}
 
 	/**
 	 * Add Edges to this system. If the edge is not connected, it won't be added. Edges are automatically added to the right subcategory.
 	 * @param  {...Edge} edges Edges to add to this system.
 	 */
 	addEdges(...edges) {
+		const Node = require('./Node');
 		edges.forEach((edge) => {
 			let isFrom = edge.source instanceof Node ? edge.source.system === this : edge.source === this;
 			let isTo = edge.target instanceof Node ? edge.target.system === this : edge.target === this;
@@ -151,7 +163,7 @@ class System {
 			edges.push(...this.edges.internal.filter((e) => e.target === node));
 		}
 		if (includeChildren) {
-			edges.push(...node.mapChildren(c => this.edgesFrom(c, includeInternal, true)))
+			edges.push(...node.mapChildren((c) => this.edgesFrom(c, includeInternal, true)));
 		}
 		return edges;
 	}
@@ -162,7 +174,7 @@ class System {
 			edges.push(...this.edges.internal.filter((e) => e.source === node));
 		}
 		if (includeChildren) {
-			edges.push(...node.mapChildren(c => this.edgesFrom(c, includeInternal, true)))
+			edges.push(...node.mapChildren((c) => this.edgesFrom(c, includeInternal, true)));
 		}
 		return edges;
 	}
@@ -170,20 +182,18 @@ class System {
 	edgesOf(node) {
 		return this.allEdges.filter((e) => e.source === node || e.target === node);
 	}
-	
-	forEachEdge();
-	
-	mapEdges();
-	
-	removeEdges();
-	
-	
-	
-	getNode(id);
-	getEdge(id);
-	getNodesCount();
-	getEdgesCound();
-	height();
+
+	forEachEdge() {}
+
+	mapEdges() {}
+
+	removeEdges() {}
+
+	getNode(id) {}
+	getEdge(id) {}
+	getNodesCount() {}
+	getEdgesCound() {}
+	height() {}
 	// TODO: Add Events
 }
 
