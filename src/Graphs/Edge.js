@@ -13,6 +13,18 @@ class Edge {
 		this.target = target;
 		this.data = data || {};
 	}
+
+	get sourceSystem() {
+		const Node = require('./Node');
+		if (this.source instanceof Node) return this.source.system;
+		else return this.source;
+	}
+
+	get targetSystem() {
+		const Node = require('./Node');
+		if (this.target instanceof Node) return this.target.system;
+		else return this.target;
+	}
 }
 
 module.exports = Edge;

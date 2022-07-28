@@ -1,6 +1,7 @@
 const eventify = require('ngraph.events');
 const newID = require('../Utils/id');
 const Edge = require('./Edge');
+const XSet = require('../Utils/ExtendedSet');
 
 // require('./Node) can't be called at the top:
 // https://stackoverflow.com/questions/29023320/resolving-circular-dependency-in-nodejs-model
@@ -22,18 +23,26 @@ class System {
 	/**
 	 * Create a new System object. Systems are Trees with the added ability to store edges between different Systems. These edges can be generally between systems or detailedly between the individual nodes of the systems.
 	 * @param {Node} root Root node of the system.
+	 * @param {any} data Data to store with the system.
 	 * @param {systemOptions} options Options for this system. Gets merged with the default options for systems.
 	 */
-	constructor(root, options) {
+	constructor(root = null, data = {}, options = {}) {
 		const Node = require('./Node');
 		this.id = newID();
 		this.options = Object.assign({}, defaultOpts, options);
-		this.root = root instanceof Node ? root : new Node(this);
-		this.root.system = this;
+		this.data = data || {};
+
+		if (root instanceof Node) {
+			console.log(root);
+			root.system.removeNodes(root.id);
+			this.root = root;
+			root.changeSystem(this);
+		} else this.root = new Node(this);
+
 		this.edges = {
-			from: [],
-			to: [],
-			internal: [],
+			from: new XSet(),
+			to: new XSet(),
+			internal: new XSet(),
 		};
 	}
 
@@ -47,40 +56,34 @@ class System {
 
 	/**
 	 * Get all systems connected to from this system
-	 * @returns {Set<System>}
+	 * @returns {Array<System>}
 	 */
 	get systemsTo() {
-		const Node = require('./Node');
-		let systems = new Set();
-		this.edges.to.forEach((e) => {
-			if (e.target instanceof System) systems.add(e.target);
-			else if (e.target instanceof Node) systems.add(e.target.system);
-		});
+		let systems = new XSet();
+		this.edges.to.forEach((e) => systems.add(e.targetSystem));
 		return systems;
 	}
 
 	/**
 	 * Get all systems that connect to this system.
-	 * @returns {Set<System>}
+	 * @returns {Array<System>}
 	 */
 	get systemsFrom() {
-		const Node = require('./Node');
-		let systems = new Set();
-		this.edges.from.forEach((e) => {
-			if (e.source instanceof System) systems.add(e.source);
-			else if (e.source instanceof Node) systems.add(e.source.system);
-		});
+		let systems = new XSet();
+		this.edges.from.forEach((e) => systems.add(e.sourceSystem));
 		return systems;
 	}
 
 	/**
 	 * Get all systems connected with this system.
-	 * @returns {Set<System>}
+	 * @returns {Array<System>}
 	 */
 	get connectedSystems() {
-		let systems = this.systemsFrom;
-		this.systemsTo.forEach((s) => systems.add(s));
-		return systems;
+		return [...this.systemsTo, ...this.systemsFrom];
+	}
+
+	get nodes() {
+		return this.root.nodes;
 	}
 
 	getLevels() {
@@ -131,6 +134,7 @@ class System {
 	}
 
 	addNode(node, parent = this.root) {
+		node.system.removeNodes(node.id);
 		parent.addChildren(node);
 		return this;
 	}
@@ -139,7 +143,11 @@ class System {
 
 	mapNodes() {}
 
-	removeNodes() {}
+	removeNodes(...ids) {
+		ids.forEach((id) => {
+			this.root.removeChild(id);
+		});
+	}
 
 	/**
 	 * Add Edges to this system. If the edge is not connected, it won't be added. Edges are automatically added to the right subcategory.
@@ -148,12 +156,12 @@ class System {
 	addEdges(...edges) {
 		const Node = require('./Node');
 		edges.forEach((edge) => {
-			let isFrom = edge.source instanceof Node ? edge.source.system === this : edge.source === this;
-			let isTo = edge.target instanceof Node ? edge.target.system === this : edge.target === this;
+			let isSource = edge.sourceSystem === this;
+			let isTarget = edge.targetSystem === this;
 
-			if (isFrom && isTo) this.edges.internal.push(edge);
-			else if (isFrom) this.edges.from.push(edge);
-			else if (isTo) this.edges.to.push(edge);
+			if (isSource && isTarget) this.edges.internal.add(edge);
+			else if (isSource) this.edges.from.add(edge);
+			else if (isTarget) this.edges.to.add(edge);
 		});
 	}
 
@@ -179,8 +187,10 @@ class System {
 		return edges;
 	}
 
-	edgesOf(node) {
-		return this.allEdges.filter((e) => e.source === node || e.target === node);
+	edgesOf(node, includeTreeEdges = false) {
+		let res = this.allEdges.filter((e) => e.source === node || e.target === node);
+		if (includeTreeEdges) res.push(...node.children);
+		return res;
 	}
 
 	forEachEdge() {}
@@ -189,10 +199,16 @@ class System {
 
 	removeEdges() {}
 
-	getNode(id) {}
+	getNode(id) {
+		return this.root.getNode(id);
+	}
+
 	getEdge(id) {}
+
 	getNodesCount() {}
+
 	getEdgesCound() {}
+
 	height() {}
 	// TODO: Add Events
 }

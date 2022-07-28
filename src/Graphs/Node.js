@@ -1,6 +1,7 @@
 // TODO: Should Events be added to the individual nodes or be handled by the higher classes?
 
 const newID = require('../Utils/id');
+const XSet = require('../Utils/ExtendedSet');
 const System = require('./System');
 
 /**
@@ -24,12 +25,25 @@ class Node {
 		this.system = system || new System(this, options);
 		this.root = this;
 		this.parent = null;
-		this.children = new Set();
+		this.children = new XSet();
 		this.options = Object.assign({}, defaultOpts, options);
 	}
 
 	get edges() {
-		return this.system.edgesOf(this);
+		return this.system.edgesOf(this, true);
+	}
+
+	get nodes() {
+		return [this, ...this.children];
+	}
+
+	getNode(id) {
+		if (this.id === id) return this;
+		for (let child of this.children) {
+			let node = child.getNode(id);
+			if (node !== null) return node;
+		}
+		return null;
 	}
 
 	/**
