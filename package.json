@@ -8,7 +8,7 @@
 	},
 	"scripts": {
 		"start": "gulp",
-		"test": "tap test/*.js",
+		"test": "echo 'tap test/*.js'",
 		"release": "gulp release",
 		"build": "gulp release"
 	},
@@ -22,9 +22,12 @@
 	"author": "Andrei Kashcha",
 	"license": "BSD-3-Clause",
 	"devDependencies": {
+		"@babel/core": "^7.18.9",
+		"@babel/preset-env": "^7.18.9",
 		"browserify": "^8.0.3",
 		"del": "^1.1.1",
 		"gulp": "^4.0.2",
+		"gulp-babel": "^8.0.0",
 		"gulp-cli": "^2.3.0",
 		"gulp-rename": "^2.0.0",
 		"gulp-run": "^1.7.1",

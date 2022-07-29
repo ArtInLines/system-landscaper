@@ -18,11 +18,12 @@ class EventManager {
 		return this.on(event, onceCallback);
 	}
 
-	off(event, callback) {
-		if (!this.events[event]) {
-			return;
+	off(event = null, callback = null) {
+		if (event === null) this.events = {};
+		else if (this.events[event]) {
+			if (callback === null) delete this.events[event];
+			else this.events[event] = this.events[event].filter((cb) => cb !== callback);
 		}
-		this.events[event] = this.events[event].filter((cb) => cb !== callback);
 		return this;
 	}
 

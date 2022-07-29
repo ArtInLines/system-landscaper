@@ -2,6 +2,12 @@
 
 This Repository is a fork from [VivaGraphJS](https://github.com/anvaka/VivaGraphJS), yet updated for a more specific purpose: Displaying and allowing the modification of IT-System-Landscapes. More info on this will be provided, if this repo ever goes public.
 
+## Usage
+
+As of now, nothing should work yet and nothing has been tested yet lol.
+
+However, the idea is to provide a single distributed file for the entire library. This library would then set a global variable for scripts to use. The advantage of this is that using this library doesn't require the use of any module bundlers and makes debugging much simpler that way. This is the same approach the original ngraph/VivaGraphJS library used.
+
 ## API Specification for highest Abstraction Layer
 
 #### Adding Data

@@ -2,7 +2,7 @@ module.exports = constant;
 
 var merge = require('ngraph.merge');
 var random = require('ngraph.random').random;
-var Rect = require('../Utils/rect.js');
+var Rect = require('../Geom/rect.js');
 
 /**
  * Does not really perform any layouting algorithm but is compliant

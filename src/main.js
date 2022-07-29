@@ -1,96 +1,49 @@
-const SystemLandscaper = {
-	events: require('ngraph.events'),
-	Graph: {
-		version: require('./version.js'),
-		graph: require('ngraph.graph'),
+module.exports = {
+	// TODO: Update Graph to use SystemLandscape
+	graph: require('ngraph.graph'),
 
-		serializer: function () {
-			return {
-				loadFromJSON: require('ngraph.fromjson'),
-				storeToJSON: require('ngraph.tojson'),
-			};
-		},
-
-		centrality: require('./Algorithms/centrality.js'),
-		operations: require('./Algorithms/operations.js'),
-
-		geom: function () {
-			return {
-				intersect: require('gintersect'),
-				intersectRect: require('./Utils/intersectRect.js'),
-			};
-		},
-
-		webgl: require('./WebGL/webgl.js'),
-		webglInputEvents: require('./WebGL/webglInputEvents.js'),
-
-		generator: function () {
-			return require('ngraph.generators');
-		},
-
-		Input: {
-			domInputManager: require('./Input/domInputManager.js'),
-			webglInputManager: require('./Input/webglInputManager.js'),
-		},
-
-		Utils: {
-			// TODO: move to Input
-			dragndrop: require('./Input/dragndrop.js'),
-			findElementPosition: require('./Utils/findElementPosition.js'),
-			timer: require('./Utils/timer.js'),
-			getDimension: require('./Utils/getDimensions.js'),
-			events: require('./Utils/backwardCompatibleEvents.js'),
-		},
-
-		Layout: {
-			forceDirected: require('ngraph.forcelayout'),
-			constant: require('./Layout/constant.js'),
-			interactive: require('./Layout/interactive.js'),
-		},
-
-		View: {
-			// TODO: Move `webglXXX` out to webgl namespace
-			Texture: require('./WebGL/texture.js'),
-			// TODO: This should not be even exported
-			webglAtlas: require('./WebGL/webglAtlas.js'),
-			webglImageNodeProgram: require('./WebGL/webglImageNodeProgram.js'),
-			webglLinkProgram: require('./WebGL/webglLinkProgram.js'),
-			webglNodeProgram: require('./WebGL/webglNodeProgram.js'),
-			webglLine: require('./WebGL/webglLine.js'),
-			webglSquare: require('./WebGL/webglSquare.js'),
-			webglImage: require('./WebGL/webglImage.js'),
-			webglGraphics: require('./View/webglGraphics.js'),
-			// TODO: Deprecate this:
-			_webglUtil: {
-				parseColor: require('./WebGL/parseColor.js'),
-			},
-
-			// TODO: move to svg namespace
-			svgGraphics: require('./View/svgGraphics.js'),
-
-			renderer: require('./View/renderer.js'),
-
-			// deprecated
-			cssGraphics: function () {
-				throw new Error('cssGraphics is deprecated. Please use older version of vivagraph (< 0.7) if you need it');
-			},
-
-			svgNodeFactory: function () {
-				throw new Error('svgNodeFactory is deprecated. Please use older version of vivagraph (< 0.7) if you need it');
-			},
-
-			community: function () {
-				throw new Error('community is deprecated. Please use vivagraph < 0.7 if you need it, or `https://github.com/anvaka/ngraph.slpa` module');
-			},
-		},
-
-		Rect: require('./Utils/rect.js'),
-
-		svg: require('simplesvg'),
-
-		// TODO: should be camelCase
-		BrowserInfo: require('./Utils/browserInfo.js'),
+	serializer: {
+		// TODO: Update Serializers
+		loadFromJSON: require('ngraph.fromjson'),
+		storeToJSON: require('ngraph.tojson'),
 	},
-};
 
-module.exports = SystemLandscaper;
+	Geom: {
+		intersect: require('gintersect'),
+		intersectRect: require('./Geom/intersectRect.js'),
+		Rect: require('./Geom/rect.js'),
+	},
+
+	Input: {
+		domInputManager: require('./Input/domInputManager.js'),
+		dragndrop: require('./Input/dragndrop.js'),
+		findElementPosition: require('./Input/findElementPosition.js'),
+		getDimension: require('./Input/getDimensions.js'),
+	},
+
+	Utils: {
+		documentEvents: require('./Utils/documentEvents.js'),
+		nullEvents: require('./Utils/nullEvents.js'),
+		windowEvents: require('./Utils/windowEvents.js'),
+		timer: require('./Utils/timer.js'),
+		newID: require('./Utils/id.js'),
+		EventManager: require('./Utils/EventManager.js'),
+		Trie: require('./Utils/Trie.js'),
+		Tree: require('./Utils/Tree.js'),
+		ExtendedSet: require('./Utils/ExtendedSet.js'),
+	},
+
+	Layout: {
+		forceDirected: require('ngraph.forcelayout'),
+		constant: require('./Layout/constant.js'),
+		interactive: require('./Layout/interactive.js'),
+	},
+
+	svgGraphics: require('./View/svgGraphics.js'),
+
+	renderer: require('./renderer.js'),
+
+	svg: require('simplesvg'),
+
+	browserInfo: require('./Utils/browserInfo.js'),
+};
