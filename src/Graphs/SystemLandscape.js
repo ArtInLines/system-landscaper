@@ -1,106 +1,136 @@
 const EventManager = require('../Utils/EventManager');
-const Edge = require('./Edge');
-const Node = require('./Node');
+const Trie = require('../Utils/Trie');
+const newID = require('../Utils/id');
+const SystemTree = require('./SystemTree');
 const System = require('./System');
 
 const defaultOpts = {};
 
 class SystemLandscape extends EventManager {
-	constructor(options) {
-		this.options = Object.assign({}, defaultOpts, options);
-		this.edges = new Map();
-		this.systems = new Map();
+	constructor() {
+		this.systemsByName = new Trie();
+		this.systemsByID = new Map();
+		this.systemTrees = [];
+		this.edges = [];
 	}
 
-	get nodes() {
-		let nodes = [];
-		this.systems.forEach((system) => nodes.push(...system.nodes));
-		return nodes;
-	}
-
-	// Get Data
+	// Getting Data
 
 	getSystem(id) {
-		if (this.systems.has(id)) return this.systems.get(id);
-		return null;
+		if (this.systemsByID.has(id)) return this.systemsByID.get(id);
+		else return null;
+	}
+
+	getSystemTree(id) {
+		return this.systemTrees.find((tree) => tree.id === id);
+	}
+
+	getSystems(startLayer = 0, endLayer = startLayer, flatten = false) {
+		let res = this.systemTrees.map((tree) => tree.getSystems(startLayer, endLayer));
+		if (flatten) return res.flat(1);
+		else return res;
+	}
+
+	getSystemsByName(name) {
+		return this.systemsByName.findPrefix(name);
+	}
+
+	getLinksOfSystem(systemID, horizontal = true, vertical = true, includeLinksOfChildren = false) {
+		return this.edges.filter((edge) => edge.source === systemID || edge.target === systemID);
 	}
 
 	getEdge(id) {
-		if (this.edges.has(id)) return this.edges.get(id);
-		return null;
+		return this.edges.find((edge) => edge.id === id);
 	}
 
-	/**
-	 * Get a node in the SystemLandscape by its id. If the node doesn't exist, null is returned.
-	 * @param {Number} id Id of the node to get.
-	 * @returns {?Node}
-	 */
-	getNode(id) {
-		for (let system of this.systems) {
-			let node = system.getNode(id);
-			if (node) return node;
-		}
-		return null;
+	// Adding Data
+
+	addSystem(name, data, parent = null) {
+		// TODO
 	}
 
-	// Add Data
-
-	addSystem(system = null, data = null) {
-		system = system instanceof System ? system : new System(null, data);
-		this.systems.set(system.id, system);
-		return this;
+	linkSystems(from, to, data) {
+		// TODO
 	}
 
-	addLink(from, to) {
-		const edge = new Edge(from, to);
-		this.edges.set(edge.id, edge);
-		edge.sourceSystem.addEdges(edge);
-		edge.targetSystem.addEdges(edge);
-		return this;
+	linkSystemsUndirected(system1, system2, data) {
+		this.linkSystems(system1, system2, data);
+		this.linkSystems(system2, system1, data);
+		// TODO: Anything else to do?
 	}
 
-	addNode(parent = null, data = null, options = { addOldRootAsChild: true }) {
-		const node = new Node(null, data, options);
-		console.log(node);
-		if (parent instanceof Node) parent.system.addNode(node, parent);
-		else if (parent instanceof System) parent.changeRoot(node, options.addOldRootAsChild);
-		return node;
-	}
+	// Removing Data
 
-	// Change data
-
-	/**
-	 * Move a node to a new parent node/system.
-	 * @param {Node|Number}} node Node to move. Either a reference to the node or its id.
-	 * @param {?(Node|System)} newParent A reference to the node's new parent. If it should become the root of a new system, input the system instead. If it should become the root of its own system, input null.
-	 * @param {Boolean} addOldRootAsChild Only important if newParent is a system. If true, the old root of the system will be added as a child of the new root.
-	 */
-	moveNode(node, newParent, addOldRootAsChild) {
-		if (!(node instanceof Node)) node = this.getNode(node.id);
-		if (node) {
-			if (newParent instanceof Node) newParent.system.addNode(node, newParent);
-			else if (newParent instanceof System) newParent.changeRoot(node.system, addOldRootAsChild);
-			else new System();
-		}
-	}
-
-	// Remove Data
-
-	removeSystem(id) {
-		this.systems.delete(id);
-		return this;
+	removeSystem(id, removeChildren = true) {
+		// TODO
 	}
 
 	removeEdge(id) {
-		this.edges.delete(id);
-		return this;
+		// TODO
 	}
 
-	removeNode(id) {
-		for (let system of this.systems) {
-			system.removeNodes(id);
-		}
-		return this;
+	// Updating Data
+
+	updateSystem(id, data) {
+		// TODO
+	}
+
+	updateEdge(id, data) {
+		// TODO
+	}
+
+	// Moving Data
+
+	moveSystem(id, newParent, moveChildren = true) {
+		// TODO
+	}
+
+	moveEdge(id, newSource = null, newTarget = null, keepBidirectiona = true) {
+		// TODO
+	}
+
+	// Positioning
+
+	positionSystem(id, x, y) {
+		// TODO
+	}
+
+	positionSystemTree(id, x, y) {
+		// TODO
+	}
+
+	automaticLayout(layout) {
+		// TODO
+	}
+
+	positionEdge(params) {
+		// TODO
+	}
+
+	// Saving / Loading
+
+	save(format, location = null) {
+		// TODO
+	}
+
+	load(location, format = null) {
+		// TODO
+	}
+
+	saveView(name) {
+		// TODO
+	}
+
+	deleteView(name) {
+		// TODO
+	}
+
+	goBack(steps = 1) {
+		// TODO
+	}
+
+	goForward(steps = 1) {
+		// TODO
 	}
 }
 

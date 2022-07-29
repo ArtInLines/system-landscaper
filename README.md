@@ -6,7 +6,7 @@ This Repository is a fork from [VivaGraphJS](https://github.com/anvaka/VivaGraph
 
 #### Adding Data
 
--   addSystem(id/name, data[, parent]) -> System
+-   addSystem(id/name, data[, parent = null]) -> System
 
     -   Create a new System/Node, that is added to the System-Landscape
 
@@ -22,18 +22,26 @@ This Repository is a fork from [VivaGraphJS](https://github.com/anvaka/VivaGraph
 
 #### Getting Data
 
--   getSystems([startLayer = 0[, endLayer = startLayer]]) -> System[]
+-   getSystems([startLayer = 0[, endLayer = startLayer[, flatten = false]]]) -> System[] | System[][]
 
     -   Return a batch of systems that are all on the layer from `startLayer` to `endLayer` inclusive
+    -   If `flatten` is set to false, the return value is an Array of Arrays, where each inner Array holds all wanted Systems from a single SystemTree.
 
 -   getSystem(id/name) -> System
 
     -   Return a single system with the specified id/name or null if it doesn't exist
 
--   getLinksOfSystem(id/node[, horizontal = true[, vertical = false]]) -> Edge[]
+-   getSystemsByName(name) -> System[]
+
+    -   Get all Systems fitting a specified name
+
+-   getLinksOfSystem(id/node[, horizontal = true[, vertical = false[, includeLinksOfChildren = false]]]) -> Edge[]
 
     -   Return a list of all edges connected with a certain System
     -   `horizontal` means edges outside of the System-Tree, while `vertical` refers specifially to the nodes in the System-Tree
+
+-   getEdge(id) -> Edge
+    -   Return an Edge with the specified ID
 
 #### Removing Data
 
@@ -72,13 +80,16 @@ This Repository is a fork from [VivaGraphJS](https://github.com/anvaka/VivaGraph
 
 #### Positioning
 
--   positionSystemAt(id/name, x, y) -> Plane
+-   positionSystem(id/name, x, y) -> Plane
+
+-   positionSystemTree(id/name, x, y) -> Plane
 
 -   automaticLayout(layout) -> Plane
 
     -   Run some automatic layout algorithm on the System-Landscape and return the newly created Plane
 
 -   positionEdge(???) -> Plane
+
     -   Change the positioning/curving of edges
     -   Maybe by specifying parameters for Bezier curves?
     -   Maybe by adding points and creating 90° angles?
@@ -109,6 +120,7 @@ This Repository is a fork from [VivaGraphJS](https://github.com/anvaka/VivaGraph
     -   Changes should correspond to both changes in the Graph-Data and its positioning
 
 -   goForward([steps = 1]) -> System-Landscape
+
     -   The opposite of goBack()
     -   Only possible if no changes happened after goBack() was called
 

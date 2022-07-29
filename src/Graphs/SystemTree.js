@@ -9,12 +9,13 @@ const newID = require('../Utils/id');
 // Problem with that is the difficult use of "this":
 // https://stackoverflow.com/a/20279485/13764271
 
-class System extends EventManager {
+class SystemTree extends EventManager {
 	/**
 	 * Create a new System object. Systems are Trees with the added ability to store edges between different Systems. These edges can be generally between systems or detailedly between the individual nodes of the systems.
+	 * @param {?System} root Root node of the system.
 	 * @param {any} data Data to store with the system.
 	 */
-	constructor(data = {}) {
+	constructor(root = null, data = {}) {
 		const System = require('./System');
 		this.id = newID();
 		this.data = data || {};
@@ -29,4 +30,4 @@ class System extends EventManager {
 	}
 }
 
-module.exports = System;
+module.exports = SystemTree;
