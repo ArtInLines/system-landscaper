@@ -1,6 +1,6 @@
 const Main = {
 	// TODO: Update Graph to use SystemLandscape
-	graph: require('ngraph.graph'),
+	graph: require('./Graphs/SystemLandscape.js'),
 
 	serializer: {
 		// TODO: Update Serializers

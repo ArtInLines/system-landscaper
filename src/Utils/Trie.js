@@ -26,7 +26,7 @@ class Trie {
 
 		let idx = this.chars.indexOf(str[0]);
 		if (idx === -1) return null;
-		else return this.tries[idx].find(str.substr(1));
+		else return this.tries[idx].find(str.substring(1));
 	}
 
 	/**

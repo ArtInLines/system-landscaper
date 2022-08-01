@@ -11,7 +11,7 @@ const newID = require('../Utils/id');
 
 class SystemTree extends EventManager {
 	/**
-	 * Create a new System object. Systems are Trees with the added ability to store edges between different Systems. These edges can be generally between systems or detailedly between the individual nodes of the systems.
+	 * Create a new SystemTree object. SystemTrees have the added ability to store edges between different Systems. These edges can be generally between systems or detailedly between the individual nodes of the systems.
 	 * @param {?System} root Root node of the system.
 	 * @param {any} data Data to store with the system.
 	 */
