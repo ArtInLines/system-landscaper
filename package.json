@@ -7,35 +7,27 @@
 		"doc": "docs"
 	},
 	"scripts": {
-		"start": "gulp",
-		"test": "echo 'tap test/*.js'",
-		"release": "gulp release",
-		"build": "gulp release"
+		"build": "webpack --config webpack.config.js",
+		"dev": "webpack --config webpack.config.js --watch"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/anvaka/VivaGraphJS.git"
 	},
 	"keywords": [
-		"graph"
+		"graph",
+		"system-landscape",
+		"visualization",
+		"graph-drawing"
 	],
-	"author": "Andrei Kashcha",
 	"license": "BSD-3-Clause",
 	"devDependencies": {
 		"@babel/core": "^7.18.9",
 		"@babel/preset-env": "^7.18.9",
-		"browserify": "^8.0.3",
-		"del": "^1.1.1",
-		"gulp": "^4.0.2",
-		"gulp-babel": "^8.0.0",
-		"gulp-cli": "^2.3.0",
-		"gulp-rename": "^2.0.0",
-		"gulp-run": "^1.7.1",
-		"gulp-uglify": "^3.0.2",
+		"babel-loader": "^8.2.5",
 		"ngraph.remove-overlaps": "^1.0.0",
-		"tap": "^0.4.13",
-		"vinyl-buffer": "^1.0.1",
-		"vinyl-source-stream": "^2.0.0"
+		"webpack": "^5.74.0",
+		"webpack-cli": "^4.10.0"
 	},
 	"dependencies": {
 		"gintersect": "0.1.0",

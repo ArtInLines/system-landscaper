@@ -1,11 +1,11 @@
-console.log(Viva);
+console.log(SystemLandscaper);
 
-const graph = Viva.Graph.graph();
+const graph = SystemLandscaper.graph();
 
 graph.addLink(1, 2);
 
-const renderer = Viva.Graph.View.renderer(graph, {
-	layout: Viva.Graph.Layout.interactive(graph, {}),
-	graphics: Viva.Graph.View.svgGraphics(),
+const renderer = SystemLandscaper.renderer(graph, {
+	layout: SystemLandscaper.Layout.interactive(graph, {}),
+	graphics: SystemLandscaper.svgGraphics(),
 });
 renderer.run();

@@ -55,9 +55,7 @@ function dragndrop(element) {
 			}
 		},
 		preventDefault = function (e) {
-			if (e.preventDefault) {
-				e.preventDefault();
-			}
+			if (e.preventDefault) e.preventDefault();
 		},
 		handleDisabledEvent = function (e) {
 			stopPropagation(e);
@@ -125,9 +123,7 @@ function dragndrop(element) {
 			}
 
 			e = e || window.event;
-			if (e.preventDefault) {
-				e.preventDefault();
-			}
+			if (e.preventDefault) e.preventDefault();
 
 			e.returnValue = false;
 			var delta = -e.deltaY,

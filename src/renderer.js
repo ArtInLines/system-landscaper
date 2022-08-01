@@ -126,7 +126,7 @@ class Renderer extends EventManager {
 	 * Gets current layout.
 	 */
 	getLayout() {
-		return layout;
+		return this.layout;
 	}
 
 	/**
@@ -218,25 +218,23 @@ class Renderer extends EventManager {
 	}
 
 	_onRenderFrame() {
-		this.isStable = layout.step() && !userInteraction;
+		this.isStable = this.getLayout().step() && !this.userInteraction;
 		this._renderGraph();
 
 		return !this.isStable;
 	}
 
 	_renderIterations(iterationsCount) {
-		if (this.animationTimer) {
-			return;
-		}
+		if (this.animationTimer) return;
 
-		if (iterationsCount !== undefined) {
+		if (typeof iterationsCount === 'number') {
 			this.animationTimer = timer(() => {
 				iterationsCount -= 1;
 				if (iterationsCount < 0) return false;
-				else return onRenderFrame();
+				else return this._onRenderFrame();
 			}, this.FRAME_INTERVAL);
 		} else {
-			this.animationTimer = timer(onRenderFrame, this.FRAME_INTERVAL);
+			this.animationTimer = timer(() => this._onRenderFrame(), this.FRAME_INTERVAL);
 		}
 	}
 
@@ -255,7 +253,7 @@ class Renderer extends EventManager {
 
 	_updateCenter() {
 		let graphRect = this.layout.getGraphRect();
-		let containerSize = getDimension(container);
+		let containerSize = getDimension(this.container);
 
 		var cx = (graphRect.x2 + graphRect.x1) / 2;
 		var cy = (graphRect.y2 + graphRect.y1) / 2;
@@ -317,9 +315,9 @@ class Renderer extends EventManager {
 
 	_initDom() {
 		this.graphics.init(this.container);
-		this.graph.forEachNode(this._createNodeUi);
+		this.graph.forEachNode((node) => this._createNodeUi(node));
 
-		if (this.renderLinks) this.graph.forEachLink(this._createLinkUi);
+		if (this.renderLinks) this.graph.forEachLink((link) => this._createLinkUi(link));
 	}
 
 	_releaseDom() {
@@ -384,7 +382,7 @@ class Renderer extends EventManager {
 	}
 
 	_releaseGraphEvents() {
-		this.graph.off('changed', onGraphChanged);
+		this.graph.off('changed', this._onGraphChanged);
 	}
 
 	_scale(out, scrollPoint) {
@@ -399,13 +397,13 @@ class Renderer extends EventManager {
 		this.transform.scale = this.graphics.scale(scaleFactor, scrollPoint);
 
 		this._renderGraph();
-		this.emit('scale', transform.scale);
+		this.emit('scale', this.transform.scale);
 
-		return transform.scale;
+		return this.transform.scale;
 	}
 
 	_listenToEvents() {
-		this.windowEvents.on('resize', this._onWindowResized);
+		windowEvents.on('resize', this._onWindowResized);
 
 		this._releaseContainerDragManager();
 		if (this._isInteractive('drag')) {
@@ -418,7 +416,7 @@ class Renderer extends EventManager {
 			});
 		}
 
-		if (this.isInteractive('scroll')) {
+		if (this._isInteractive('scroll')) {
 			if (!this.containerDrag) {
 				this.containerDrag = dragndrop(this.container);
 			}
@@ -427,7 +425,7 @@ class Renderer extends EventManager {
 			});
 		}
 
-		this.graph.forEachNode(this._listenNodeEvents);
+		this.graph.forEachNode((node) => this._listenNodeEvents(node));
 
 		this._releaseGraphEvents();
 		this.graph.on('changed', this._onGraphChanged);
@@ -437,7 +435,7 @@ class Renderer extends EventManager {
 		this.rendererInitialized = false;
 		this._releaseGraphEvents();
 		this._releaseContainerDragManager();
-		this.windowEvents.off('resize', this._onWindowResized);
+		windowEvents.off('resize', this._onWindowResized);
 		this.off();
 		this.animationTimer.stop();
 

@@ -1,4 +1,4 @@
-module.exports = {
+const Main = {
 	// TODO: Update Graph to use SystemLandscape
 	graph: require('ngraph.graph'),
 
@@ -39,7 +39,7 @@ module.exports = {
 		interactive: require('./Layout/interactive.js'),
 	},
 
-	svgGraphics: require('./View/svgGraphics.js'),
+	svgGraphics: require('./svgGraphics.js'),
 
 	renderer: require('./renderer.js'),
 
@@ -47,3 +47,6 @@ module.exports = {
 
 	browserInfo: require('./Utils/browserInfo.js'),
 };
+
+global.SystemLandscaper = Main;
+module.exports = Main;
