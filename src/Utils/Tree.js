@@ -1,12 +1,14 @@
 const newID = require('../Utils/id');
+const EventManager = require('./EventManager');
 
-class Tree {
+class Tree extends EventManager {
 	/**
 	 * Create a new Tree object. All nodes in the Tree are instances of this Tree class.
 	 * @param {?Tree} parent The parent of this tree-node
 	 * @param {any} data Data associated with this node
 	 */
 	constructor(parent = null, data = {}) {
+		super();
 		/** @type {Number} */
 		this.id = newID();
 		/** @type {any} */
@@ -61,15 +63,23 @@ class Tree {
 	}
 
 	/**
-	 * Get all nodes in the tree, that are in a on startLayer, endLayer or any layer in between. The layers are counted from this node onward. That is done to implement this method recursively, as users will mainly call it from the root only anyways.
+	 * Get all nodes in the tree, that are in startLayer, endLayer or any layer in between. The layers are counted from this node onward. That is done to implement this method recursively, as users will mainly call it from the root only anyways.
+	 
+	 If startLayer is 0, this node is included in the result as well.
+	 
+	 Defaults to get all nodes in the tree, starting from layer 0 and going to layer Infinity (that is until the tree ended).
 	 * @param {Number} startLayer The first layer to get nodes from
 	 * @param {Number} endLayer The last layer to get nodes from
 	 * @returns {Tree[]} List of Nodes in the specified range of layers.
 	 */
-	getChildren(startLayer = 0, endLayer = startLayer) {
-		if (startLayer === 0 && endLayer === 0) return [this];
-		else if (startLayer === 0) return [this, ...this.children.map((child) => child.getChildren(0, endLayer - 1))];
-		else return [...this.children.map((child) => child.getChildren(startLayer - 1, endLayer - 1))];
+	getChildren(startLayer = 0, endLayer = Infinity) {
+		if (startLayer === 0 && endLayer === 0) {
+			return [this];
+		} else if (startLayer === 0) {
+			return [this, ...this.children.map((child) => child.getChildren(0, endLayer - 1))];
+		} else {
+			return [...this.children.map((child) => child.getChildren(startLayer - 1, endLayer - 1))];
+		}
 	}
 
 	/**
@@ -98,9 +108,18 @@ class Tree {
 	}
 
 	/**
+	 * Change this node's parent.
+	 * @param {?Tree} newParent The new parent of this node. If set to null, this system will have no parent.
+	 */
+	changeParent(newParent = null) {
+		this.parent?.removeChild(this.id);
+		newParent?.addChild(this);
+	}
+
+	/**
 	 * Remove a child of this tree. To remove this node itself, set all references to it to `null` and let the garbage collector handle it. All children of the node will be removed as well, unless you save another reference to them before.
 	 * @param {Number} id The ID of the node to remove
-	 * @returns {Boolean} Indicates whether the node was removed. If `false`, the node doesn't exist in this Tree.
+	 * @returns {?Tree} Returns the removed child or `null` if the child couldn't be found.
 	 */
 	removeChild(id) {
 		let idx = this.children.findIndex((child) => child.id === id);
@@ -109,10 +128,11 @@ class Tree {
 				let res = child.removeChild(id);
 				if (res) return res;
 			}
-			return false;
+			return null;
 		} else {
-			this.children.splice(idx, 1);
-			return true;
+			let removedChild = this.children.splice(idx, 1)[0];
+			this.emit('childRemoved', removedChild, this);
+			return removedChild;
 		}
 	}
 }
