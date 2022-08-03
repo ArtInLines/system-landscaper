@@ -64,7 +64,7 @@ class Trie {
 
 		let idx = this.chars.indexOf(str[0]);
 		if (idx === -1) return;
-		this.tries[idx].delete(str.substr(1));
+		this.tries[idx].delete(str.substring(1));
 		if (this.tries[idx].isEmpty()) {
 			this.chars.splice(idx, 1);
 			this.tries.splice(idx, 1);

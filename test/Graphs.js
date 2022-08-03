@@ -12,16 +12,21 @@ sl.addSystem('F', null, 'C');
 sl.linkSystems('C', 'B');
 sl.linkSystemsUndirected('E', 'F');
 sl.moveEdge(sl.getEdge('C', 'B'), 'A');
-sl.moveSystem('C', 'B');
+sl.updateSystemName('C', 'C2');
+sl.moveSystem('C2', 'B');
+
+sl.updateSystemName('D', 'D2');
+
+sl.removeEdge(sl.getEdge('E', 'F'), false);
 
 // Expected Tree:
 // 	 B				A
-// 	 c	   			D
-// E  F
+// 	 C2	   			D2
+// E   F
 
 // Exprected Edges:
 // A  -> B
-// E <-> F
+// E <-  F
 
-console.log(sl.systemsByID);
+// console.log(sl.systemsByID);
 console.log(sl.edges);

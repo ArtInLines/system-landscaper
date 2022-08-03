@@ -124,6 +124,7 @@ class SystemLandscape extends EventManager {
 	}
 
 	getEdgeId(id) {
+		if (id instanceof Edge) return id;
 		return this.edges.find((edge) => edge.id === id);
 	}
 
@@ -262,22 +263,32 @@ class SystemLandscape extends EventManager {
 		this.emit('systemRemoved', sys);
 	}
 
-	removeEdge(id) {
+	removeEdge(id, keepBidirectional = true) {
 		let edge = this.getEdgeId(id);
-		let idx = this.edges.findIndex((edge) => edge.id === id);
-		this.edges.splice(idx, 1);
+		if (keepBidirectional) {
+			let edge2 = this.getEdge(edge.target, edge.source);
+			if (edge2) {
+				this.removeEdge(edge2, false);
+			}
+		}
 		let isVertical = this.isVerticalEdge(edge);
 		if (isVertical) {
 			this.getSystem(edge.source).removeChild(edge.target.id);
 		}
+
+		let idx = this.edges.findIndex((e) => e.id === edge.id);
+		// console.log(edge, idx, this.edges[idx]);
+		if (idx === -1) return false;
+		this.edges.splice(idx, 1);
 		this.emit('edgeRemoved', edge, isVertical);
+		return true;
 	}
 
 	// Updating Data
 
 	updateSystemName(id, newName) {
 		let sys = this.getSystem(id);
-		this.systemsByName.delete(id.name);
+		this.systemsByName.delete(sys.name);
 		this.systemsByName.insert(newName, sys);
 		sys.name = newName;
 	}
