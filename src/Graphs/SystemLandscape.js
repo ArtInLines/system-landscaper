@@ -68,10 +68,11 @@ class SystemLandscape extends EventManager {
 
 	/**
 	 * Get the system uniquely identified by its ID or name.
-	 * @param {Number|String} id The unique ID or name of the system
+	 * @param {Number|String|SystemNode} id The unique ID or name of the system. If the system itself is inputted, it is simply returned.
 	 * @returns {?SystemNode}
 	 */
 	getSystem(id) {
+		if (id instanceof SystemNode) return id;
 		if (typeof id === 'string') return this.getSystemByName(id);
 		if (this.hasSystem(id)) return this.systemsByID.get(id);
 		else return null;
@@ -282,11 +283,19 @@ class SystemLandscape extends EventManager {
 	}
 
 	updateSystem(id, data) {
-		// TODO
+		let sys = this.getSystem(id);
+		if (data?.name) {
+			this.updateSystemName(sys, data.name);
+			delete data.name;
+		}
+		sys.data = { ...sys.data, ...data };
+		return sys;
 	}
 
 	updateEdge(id, data) {
-		// TODO
+		let edge = this.getEdgeId(id);
+		edge.data = { ...edge.data, ...data };
+		return edge;
 	}
 
 	// Moving Data
@@ -294,12 +303,16 @@ class SystemLandscape extends EventManager {
 	moveSystem(id, newParentId = null) {
 		let system = this.getSystem(id);
 		if (!system) return false;
+		// Edge from old parent should be removed automatically via event listeners
 		let newParent = newParentId === null ? null : this.getSystem(newParentId);
 		if (newParent) {
 			newParent.addChild(system);
+			// New Edge from new Parent should be added automatically via event listeners
 		} else {
+			// If there's no new parent, the system should have its own systemTree created
+			let tree = new SystemTree(system);
+			this.systemTrees.push(tree);
 		}
-		// TODO
 	}
 
 	moveEdgeId(id, newSource = null, newTarget = null, keepBidirectional = true) {

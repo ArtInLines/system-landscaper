@@ -102,6 +102,7 @@ class Tree extends EventManager {
 	 * @returns {Tree} The child that was added
 	 */
 	addChild(child) {
+		child?.parent?.removeChild(child.id);
 		child.parent = this;
 		this.children.push(child);
 		return child;
