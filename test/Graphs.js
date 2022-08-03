@@ -8,5 +8,7 @@ sl.addSystem('C', null, 'A');
 
 sl.linkSystems('A', 'B');
 
+sl.moveEdge(sl.getEdge('A', 'B'), 'C');
+
 console.log(sl.systemsByID);
 console.log(sl.edges);

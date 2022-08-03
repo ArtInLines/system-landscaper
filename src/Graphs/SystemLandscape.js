@@ -1,14 +1,14 @@
-const EventManager = require('../Utils/EventManager');
-const Trie = require('../Utils/Trie');
-const XSet = require('../Utils/ExtendedSet');
 const newID = require('../Utils/id');
+const Trie = require('../Utils/Trie');
+const EventManager = require('../Utils/EventManager');
+const XSet = require('../Utils/ExtendedSet');
 const SystemTree = require('./SystemTree');
 const SystemNode = require('./SystemNode');
 const Edge = require('./Edge');
 
 // Expected API:
-// - addNode(node: NodeId, data?: NodeData) => Node<NodeData>
-// - addLink(from: NodeId, to: NodeId, data?: LinkData) => Link<LinkData>
+// 		- addNode(node: NodeId, data?: NodeData) => Node<NodeData>
+// 		- addLink(from: NodeId, to: NodeId, data?: LinkData) => Link<LinkData>
 // - removeNode(node: NodeId) => boolean
 // - removeLink(link: LinkId) => boolean
 // 		- getNode(node: NodeId) => Node<NodeData> | undefined
@@ -27,6 +27,8 @@ const Edge = require('./Edge');
 // - clear() => void
 
 // export default function createGraph<NodeData = any, LinkData = any>(options?: { multigraph: boolean }): Graph<NodeData, LinkData> & EventedType
+
+// TODO: Add Events for Renderer to listen to
 
 class SystemLandscape extends EventManager {
 	constructor() {
@@ -52,9 +54,25 @@ class SystemLandscape extends EventManager {
 		return this.getEdge(from, to) !== null;
 	}
 
+	isVerticalEdge(edge) {
+		return edge.source?.systemTree === edge.target?.systemTree;
+	}
+
+	sameNode(a, b) {
+		if (!(a instanceof SystemNode)) a = this.getSystem(a);
+		if (!(b instanceof SystemNode)) b = this.getSystem(b);
+		return a.id === b.id;
+	}
+
 	// Getting Data
 
+	/**
+	 * Get the system uniquely identified by its ID or name.
+	 * @param {Number|String} id The unique ID or name of the system
+	 * @returns {?SystemNode}
+	 */
 	getSystem(id) {
+		if (typeof id === 'string') return this.getSystemByName(id);
 		if (this.hasSystem(id)) return this.systemsByID.get(id);
 		else return null;
 	}
@@ -114,8 +132,8 @@ class SystemLandscape extends EventManager {
 
 	getEdge(from, to) {
 		return this.edges.find((edge) => {
-			if (from !== null && edge.source !== from) return false;
-			if (to !== null && edge.target !== to) return false;
+			if (!this.sameNode(edge.source, from)) return false;
+			if (!this.sameNode(edge.target, to)) return false;
 			return true;
 		});
 	}
@@ -159,8 +177,7 @@ class SystemLandscape extends EventManager {
 	// Adding Data
 
 	onVerticalEdgeAdded(edge, parent, child) {
-		this.edges.push(edge);
-		// TODO: Anything else to do here?
+		this.addEdge(edge);
 	}
 
 	onVerticalEdgeRemoved(edge, parent, child) {
@@ -200,6 +217,12 @@ class SystemLandscape extends EventManager {
 		return system;
 	}
 
+	addEdge(edge) {
+		this.edges.push(edge);
+		this.emit('edgeAdded', edge, this.isVerticalEdge(edge));
+		return edge;
+	}
+
 	/**
 	 * Create a new edge to link two systems/systemTrees. If the systems are not in the landscape, they will be added. If an edge between the two systems already exists, it will be returned.
 	 * @param {?SystemNode|SystemTree} from SystemNode or SystemTree from which the edge comes from
@@ -215,11 +238,11 @@ class SystemLandscape extends EventManager {
 
 		if (typeof from === 'string') from = this.getSystemByName(from);
 		if (typeof to === 'string') to = this.getSystemByName(to);
-		if (!this.hasSystem(from)) from = this.addSystem();
-		if (!this.hasSystem(to)) to = this.addSystem();
+		if (!this.hasSystem(from.id)) from = this.addSystem();
+		if (!this.hasSystem(to.id)) to = this.addSystem();
 
 		edge = new Edge(from, to, data);
-		this.edges.push(edge);
+		this.addEdge(edge);
 		return edge;
 	}
 
@@ -231,15 +254,32 @@ class SystemLandscape extends EventManager {
 
 	// Removing Data
 
-	removeSystem(id, removeChildren = true) {
-		// TODO
+	removeSystem(id) {
+		let sys = this.getSystem(id);
+		this.systemsByID.delete(id);
+		this.systemsByName.delete(sys.name);
+		this.emit('systemRemoved', sys);
 	}
 
 	removeEdge(id) {
-		// TODO
+		let edge = this.getEdgeId(id);
+		let idx = this.edges.findIndex((edge) => edge.id === id);
+		this.edges.splice(idx, 1);
+		let isVertical = this.isVerticalEdge(edge);
+		if (isVertical) {
+			this.getSystem(edge.source).removeChild(edge.target.id);
+		}
+		this.emit('edgeRemoved', edge, isVertical);
 	}
 
 	// Updating Data
+
+	updateSystemName(id, newName) {
+		let sys = this.getSystem(id);
+		this.systemsByName.delete(id.name);
+		this.systemsByName.insert(newName, sys);
+		sys.name = newName;
+	}
 
 	updateSystem(id, data) {
 		// TODO
@@ -262,8 +302,35 @@ class SystemLandscape extends EventManager {
 		// TODO
 	}
 
-	moveEdge(id, newSource = null, newTarget = null, keepBidirectiona = true) {
-		// TODO
+	moveEdgeId(id, newSource = null, newTarget = null, keepBidirectional = true) {
+		let edge = this.getEdgeId(id);
+		return this.moveEdge(edge, newSource, newTarget, keepBidirectional);
+	}
+
+	moveEdge(edge, newSource = null, newTarget = null, keepBidirectional = true) {
+		if (!edge) return false;
+		if (keepBidirectional) {
+			let otherEdge = this.getEdge(edge.target, edge.source);
+			if (otherEdge) {
+				this.moveEdge(otherEdge, newTarget, newSource, false);
+			}
+		}
+		let newSourceNode = newSource === null ? edge.source : this.getSystem(newSource);
+		let newTargetNode = newTarget === null ? edge.target : this.getSystem(newTarget);
+
+		let wasVertical = this.isVerticalEdge(edge);
+		if (wasVertical) {
+			edge.source?.removeChild(edge.target.id);
+		}
+		edge.source = newSourceNode;
+		edge.target = newTargetNode;
+		let isVertical = this.isVerticalEdge(edge);
+		if (isVertical) {
+			edge.source?.addChild(edge.target.id);
+		}
+
+		this.emit('edgeMoved', edge, wasVertical, isVertical);
+		return true;
 	}
 
 	// Positioning

@@ -55,6 +55,10 @@ class SystemTree extends EventManager {
 
 	// Adding Data
 
+	addChild(system) {
+		this.addSystem(system);
+	}
+
 	addSystem(system, parentId = null) {
 		// TODO
 	}
@@ -71,6 +75,19 @@ class SystemTree extends EventManager {
 		let system = this.getSystem(systemId);
 		if (!system) return false;
 		system?.changeParent(newParent);
+		return true;
+	}
+
+	// Removing Data
+
+	removeChild(id) {
+		return this.removeSystem(id);
+	}
+
+	removeSystem(systemId) {
+		let system = this.getSystem(systemId);
+		if (!system) return false;
+		system.parent.removeChild(system.id);
 		return true;
 	}
 }

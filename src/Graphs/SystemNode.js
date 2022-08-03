@@ -44,7 +44,7 @@ class SystemNode extends Tree {
 	addChild(child) {
 		super.addChild(child);
 		child.changeSystemTree(this.systemTree);
-		const edge = new Edge(this.id, child.id);
+		const edge = new Edge(this, child);
 		this.edgesToChildren.push(edge);
 		this.emit('edgeAdded', edge, this, child);
 		return child;
