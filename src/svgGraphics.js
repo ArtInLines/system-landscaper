@@ -9,6 +9,7 @@ module.exports = svgGraphics;
 let svg = require('simplesvg');
 let eventify = require('ngraph.events');
 let domInputManager = require('./Input/domInputManager.js');
+let intersectRect = require('./Geom/intersectRect.js');
 
 /**
  * Performs svg-based graph rendering. This module does not perform
@@ -25,18 +26,66 @@ function svgGraphics() {
 		allNodes = {},
 		allLinks = {},
 		nodeLength = 30,
-		/*jshint unused: false */
 		nodeBuilder = function (node) {
-			return svg('rect').attr('width', nodeLength).attr('height', nodeLength).attr('fill', '#00a2e8');
+			let container = svg('g');
+			let rect = svg('rect').attr('width', nodeLength).attr('height', nodeLength).attr('fill', '#00a2e8');
+			// Center text: https://stackoverflow.com/questions/5546346/how-to-place-and-center-text-in-an-svg-rectangle
+			// To do that, the building process needs access to the position of the rectangle -> the class' architecture needs to be changed for this.
+			// For now this hardcoded solution is good enough.
+			let name = svg('text')
+				.attr('y', `${(2 * nodeLength) / 3}px`)
+				.text(node.name);
+
+			container.append(rect);
+			container.append(name);
+			return container;
 		},
 		nodePositionCallback = function (nodeUI, pos) {
-			nodeUI.attr('x', pos.x - nodeLength / 2).attr('y', pos.y - nodeLength / 2);
+			nodeUI.attr('transform', 'translate(' + (pos.x - nodeLength / 2) + ',' + (pos.y - nodeLength / 2) + ')');
 		},
 		linkBuilder = function (link) {
-			return svg('line').attr('stroke', '#111');
+			return svg('path').attr('stroke', 'gray').attr('marker-end', 'url(#Triangle)');
 		},
 		linkPositionCallback = function (linkUI, fromPos, toPos) {
-			linkUI.attr('x1', fromPos.x).attr('y1', fromPos.y).attr('x2', toPos.x).attr('y2', toPos.y);
+			// Here we should take care about
+			//  "Links should start/stop at node's bounding box, not at the node center."
+
+			// For rectangular nodes Viva.Graph.geom() provides efficient way to find
+			// an intersection point between segment and rectangle
+			let toNodeSize = nodeLength;
+			let fromNodeSize = nodeLength;
+
+			let from =
+				intersectRect(
+					// rectangle:
+					fromPos.x - fromNodeSize / 2, // left
+					fromPos.y - fromNodeSize / 2, // top
+					fromPos.x + fromNodeSize / 2, // right
+					fromPos.y + fromNodeSize / 2, // bottom
+					// segment:
+					fromPos.x,
+					fromPos.y,
+					toPos.x,
+					toPos.y
+				) || fromPos; // if no intersection found - return center of the node
+
+			let to =
+				intersectRect(
+					// rectangle:
+					toPos.x - toNodeSize / 2, // left
+					toPos.y - toNodeSize / 2, // top
+					toPos.x + toNodeSize / 2, // right
+					toPos.y + toNodeSize / 2, // bottom
+					// segment:
+					toPos.x,
+					toPos.y,
+					fromPos.x,
+					fromPos.y
+				) || toPos; // if no intersection found - return center of the node
+
+			let data = 'M' + from.x + ',' + from.y + 'L' + to.x + ',' + to.y;
+
+			linkUI.attr('d', data);
 		},
 		fireRescaled = function (graphics) {
 			// TODO: maybe we shall copy changes?
@@ -194,6 +243,30 @@ function svgGraphics() {
 		init: function (container) {
 			container.appendChild(svgRoot);
 			updateTransform();
+
+			// To render an arrow we have to address two problems:
+			//  1. Links should start/stop at node's bounding box, not at the node center.
+			//  2. Render an arrow shape at the end of the link.
+
+			// Rendering arrow shape is achieved by using SVG markers, part of the SVG
+			// standard: http://www.w3.org/TR/SVG/painting.html#Markers
+
+			// Add Triangle Marker to svg definitions. This marker is used to display edges with arrows.
+			let marker = svg('marker')
+				.attr('id', 'Triangle')
+				.attr('viewBox', `0 0 ${nodeLength} ${nodeLength}`)
+				.attr('refX', `${nodeLength}`)
+				.attr('refY', `${nodeLength / 2}`)
+				.attr('markerUnits', 'strokeWidth')
+				.attr('markerWidth', `${nodeLength}`)
+				.attr('markerHeight', `${nodeLength / 2}`)
+				.attr('fill', '#333')
+				.attr('orient', 'auto');
+			marker.append('path').attr('d', `M 0 0 L ${nodeLength} ${nodeLength / 2} L 0 ${nodeLength} z`);
+			// Marker should be defined only once in <defs> child element of root <svg> element:
+			let defs = svgRoot.append('defs');
+			defs.append(marker);
+
 			// Notify the world if someone waited for update. TODO: should send an event
 			if (typeof initCallback === 'function') {
 				initCallback(svgRoot);

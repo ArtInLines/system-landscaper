@@ -15,7 +15,7 @@ sl.moveSystem('C2', 'B');
 
 sl.updateSystemName('D', 'D2');
 
-sl.removeEdge(sl.getEdge('E', 'F'), false);
+// sl.removeEdge(sl.getEdge('E', 'F'), false);
 
 const renderer = SystemLandscaper.renderer(sl);
-renderer.run();
+renderer.run(10);
