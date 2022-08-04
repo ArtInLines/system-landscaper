@@ -10,3 +10,5 @@ In no particular order:
 -   Potentially update DOMInputHandler (specifically for view-support)
 -   Further Testing
 -   Add rough UI for adding Data to Nodes & Edges
+
+-   Update usage of SVGs to be more accessible. See as a very short intro to the topic [here](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/SVG_In_HTML_Introduction#best_practices)
