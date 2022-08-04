@@ -1,8 +1,8 @@
 module.exports = constant;
 
-var merge = require('ngraph.merge');
-var random = require('ngraph.random').random;
-var Rect = require('../Geom/rect.js');
+let merge = require('ngraph.merge');
+let random = require('ngraph.random').random;
+let Rect = require('../Geom/rect.js');
 
 /**
  * Does not really perform any layouting algorithm but is compliant
@@ -20,7 +20,7 @@ function constant(graph, userSettings) {
 	});
 	// This class simply follows API, it does not use some of the arguments:
 	/*jshint unused: false */
-	var rand = random(userSettings.seed),
+	let rand = random(userSettings.seed),
 		graphRect = new Rect(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE),
 		layoutLinks = {},
 		placeNodeCallback = function (node) {
@@ -65,8 +65,8 @@ function constant(graph, userSettings) {
 			layoutLinks[link.id] = link;
 		},
 		onGraphChanged = function (changes) {
-			for (var i = 0; i < changes.length; ++i) {
-				var change = changes[i];
+			for (let i = 0; i < changes.length; ++i) {
+				let change = changes[i];
 				if (change.node) {
 					if (change.changeType === 'add') {
 						ensureNodeInitialized(change.node);
@@ -149,7 +149,7 @@ function constant(graph, userSettings) {
 		 * Returns {from, to} position of a link.
 		 */
 		getLinkPosition: function (linkId) {
-			var link = layoutLinks[linkId];
+			let link = layoutLinks[linkId];
 			return {
 				from: getNodePosition(link.fromId),
 				to: getNodePosition(link.toId),
@@ -160,7 +160,7 @@ function constant(graph, userSettings) {
 		 * Sets position of a node to a given coordinates
 		 */
 		setNodePosition: function (nodeId, x, y) {
-			var pos = layoutNodes[nodeId];
+			let pos = layoutNodes[nodeId];
 			if (pos) {
 				pos.x = x;
 				pos.y = y;

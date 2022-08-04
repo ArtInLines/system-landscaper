@@ -5,7 +5,7 @@
 module.exports = createTimer();
 
 function createTimer() {
-	var lastTime = 0,
+	let lastTime = 0,
 		vendors = ['ms', 'moz', 'webkit', 'o'],
 		i,
 		scope;
@@ -22,7 +22,7 @@ function createTimer() {
 	}
 
 	for (i = 0; i < vendors.length && !scope.requestAnimationFrame; ++i) {
-		var vendorPrefix = vendors[i];
+		let vendorPrefix = vendors[i];
 		scope.requestAnimationFrame = scope[vendorPrefix + 'RequestAnimationFrame'];
 		scope.cancelAnimationFrame = scope[vendorPrefix + 'CancelAnimationFrame'] || scope[vendorPrefix + 'CancelRequestAnimationFrame'];
 	}
@@ -42,7 +42,7 @@ function createTimer() {
 	 * callback returns true;
 	 */
 	function timer(callback) {
-		var intervalId;
+		let intervalId;
 		startTimer(); // start it right away.
 
 		return {
@@ -74,9 +74,9 @@ function createTimer() {
 	}
 
 	function rafPolyfill(callback) {
-		var currTime = new Date().getTime();
-		var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-		var id = scope.setTimeout(function () {
+		let currTime = new Date().getTime();
+		let timeToCall = Math.max(0, 16 - (currTime - lastTime));
+		let id = scope.setTimeout(function () {
 			callback(currTime + timeToCall);
 		}, timeToCall);
 		lastTime = currTime + timeToCall;

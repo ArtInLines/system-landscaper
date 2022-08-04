@@ -2,7 +2,7 @@
  * @author Andrei Kashcha (aka anvaka) / https://github.com/anvaka
  */
 
-var dragndrop = require('./dragndrop.js');
+let dragndrop = require('./dragndrop.js');
 
 class DomInputManager {
 	constructor(graph, graphics) {
@@ -23,9 +23,9 @@ class DomInputManager {
 	 *   onStop: function()
 	 */
 	bindDragNDrop(node, handlers) {
-		var events;
+		let events;
 		if (handlers) {
-			var nodeUI = this.graphics.getNodeUI(node.id);
+			let nodeUI = this.graphics.getNodeUI(node.id);
 			events = dragndrop(nodeUI);
 			if (typeof handlers.onStart === 'function') {
 				events.onStart(handlers.onStart);

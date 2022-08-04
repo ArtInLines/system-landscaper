@@ -4,15 +4,15 @@
 
 module.exports = dragndrop;
 
-var documentEvents = require('../Utils/documentEvents.js');
-var browserInfo = require('../Utils/browserInfo.js');
-var findElementPosition = require('./findElementPosition.js');
+let documentEvents = require('../Utils/documentEvents.js');
+let browserInfo = require('../Utils/browserInfo.js');
+let findElementPosition = require('./findElementPosition.js');
 
 // TODO: Move to input namespace
 // TODO: Methods should be extracted into the prototype. This class
 // does not need to consume so much memory for every tracked element
 function dragndrop(element) {
-	var start,
+	let start,
 		drag,
 		end,
 		scroll,
@@ -24,7 +24,7 @@ function dragndrop(element) {
 		touchInProgress = false,
 		pinchZoomLength = 0,
 		getMousePos = function (e) {
-			var posx = 0,
+			let posx = 0,
 				posy = 0;
 
 			e = e || window.event;
@@ -76,7 +76,7 @@ function dragndrop(element) {
 			}
 			// for IE, left click == 1
 			// for Firefox, left click == 0
-			var isLeftButton = (e.button === 1 && window.event !== null) || e.button === 0;
+			let isLeftButton = (e.button === 1 && window.event !== null) || e.button === 0;
 
 			if (isLeftButton) {
 				startX = e.clientX;
@@ -126,7 +126,7 @@ function dragndrop(element) {
 			if (e.preventDefault) e.preventDefault();
 
 			e.returnValue = false;
-			var delta = -e.deltaY,
+			let delta = -e.deltaY,
 				mousePos = getMousePos(e),
 				elementOffset = findElementPosition(element),
 				relMousePos = {
@@ -153,12 +153,12 @@ function dragndrop(element) {
 			if (e.touches.length === 1) {
 				stopPropagation(e);
 
-				var touch = e.touches[0];
+				let touch = e.touches[0];
 				move(e, touch.clientX, touch.clientY);
 			} else if (e.touches.length === 2) {
 				// it's a zoom:
-				var currentPinchLength = getPinchZoomLength(e.touches[0], e.touches[1]);
-				var delta = 0;
+				let currentPinchLength = getPinchZoomLength(e.touches[0], e.touches[1]);
+				let delta = 0;
 				if (currentPinchLength < pinchZoomLength) {
 					delta = -1;
 				} else if (currentPinchLength > pinchZoomLength) {

@@ -1,23 +1,22 @@
-var nullEvents = require('./nullEvents.js');
+let nullEvents = require('./nullEvents.js');
 
 module.exports = createDocumentEvents();
 
 function createDocumentEvents() {
-  if (typeof window === 'undefined') {
-    return nullEvents;
-  }
+	if (typeof window === 'undefined') {
+		return nullEvents;
+	}
 
-  return {
-    on: on,
-    off: off
-  };
+	return {
+		on: on,
+		off: off,
+	};
 }
 
 function on(eventName, handler) {
-  window.addEventListener(eventName, handler);
+	window.addEventListener(eventName, handler);
 }
 
 function off(eventName, handler) {
-  window.removeEventListener(eventName, handler);
+	window.removeEventListener(eventName, handler);
 }
-

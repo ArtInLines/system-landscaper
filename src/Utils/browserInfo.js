@@ -8,7 +8,7 @@ function browserInfo() {
 		};
 	}
 
-	var ua = window.navigator.userAgent.toLowerCase(),
+	let ua = window.navigator.userAgent.toLowerCase(),
 		// Useragent RegExp
 		rwebkit = /(webkit)[ \/]([\w.]+)/,
 		ropera = /(opera)(?:.*version)?[ \/]([\w.]+)/,

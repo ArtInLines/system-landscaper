@@ -6,9 +6,9 @@
 
 module.exports = svgGraphics;
 
-var svg = require('simplesvg');
-var eventify = require('ngraph.events');
-var domInputManager = require('./Input/domInputManager.js');
+let svg = require('simplesvg');
+let eventify = require('ngraph.events');
+let domInputManager = require('./Input/domInputManager.js');
 
 /**
  * Performs svg-based graph rendering. This module does not perform
@@ -16,7 +16,7 @@ var domInputManager = require('./Input/domInputManager.js');
  */
 function svgGraphics() {
 	// TODO: Let settings be passed in the constructor, so the user can customize them
-	var svgContainer,
+	let svgContainer,
 		svgRoot,
 		offsetX = 0,
 		offsetY = 0,
@@ -47,14 +47,14 @@ function svgGraphics() {
 		cachedToPos = { x: 0, y: 0 },
 		updateTransform = function () {
 			if (svgContainer) {
-				var transform = 'matrix(' + actualScale + ', 0, 0,' + actualScale + ',' + offsetX + ',' + offsetY + ')';
+				let transform = 'matrix(' + actualScale + ', 0, 0,' + actualScale + ',' + offsetX + ',' + offsetY + ')';
 				svgContainer.attr('transform', transform);
 			}
 		};
 
 	svgRoot = createSvgRoot();
 
-	var graphics = {
+	let graphics = {
 		getNodeUI: function (nodeId) {
 			return allNodes[nodeId];
 		},
@@ -140,7 +140,7 @@ function svgGraphics() {
 		inputManager: domInputManager,
 
 		translateRel: function (dx, dy) {
-			var p = svgRoot.createSVGPoint(),
+			let p = svgRoot.createSVGPoint(),
 				t = svgContainer.getCTM(),
 				origin = svgRoot.createSVGPoint().matrixTransform(t.inverse());
 
@@ -154,25 +154,25 @@ function svgGraphics() {
 			t.e += p.x;
 			t.f += p.y;
 
-			var transform = 'matrix(' + t.a + ', 0, 0,' + t.d + ',' + t.e + ',' + t.f + ')';
+			let transform = 'matrix(' + t.a + ', 0, 0,' + t.d + ',' + t.e + ',' + t.f + ')';
 			svgContainer.attr('transform', transform);
 		},
 
 		scale: function (scaleFactor, scrollPoint) {
-			var p = svgRoot.createSVGPoint();
+			let p = svgRoot.createSVGPoint();
 			p.x = scrollPoint.x;
 			p.y = scrollPoint.y;
 
 			p = p.matrixTransform(svgContainer.getCTM().inverse()); // translate to SVG coordinates
 
 			// Compute new scale matrix in current mouse position
-			var k = svgRoot.createSVGMatrix().translate(p.x, p.y).scale(scaleFactor).translate(-p.x, -p.y),
+			let k = svgRoot.createSVGMatrix().translate(p.x, p.y).scale(scaleFactor).translate(-p.x, -p.y),
 				t = svgContainer.getCTM().multiply(k);
 
 			actualScale = t.a;
 			offsetX = t.e;
 			offsetY = t.f;
-			var transform = 'matrix(' + t.a + ', 0, 0,' + t.d + ',' + t.e + ',' + t.f + ')';
+			let transform = 'matrix(' + t.a + ', 0, 0,' + t.d + ',' + t.e + ',' + t.f + ')';
 			svgContainer.attr('transform', transform);
 
 			fireRescaled(this);
@@ -181,7 +181,7 @@ function svgGraphics() {
 
 		resetScale: function () {
 			actualScale = 1;
-			var transform = 'matrix(1, 0, 0, 1, 0, 0)';
+			let transform = 'matrix(1, 0, 0, 1, 0, 0)';
 			svgContainer.attr('transform', transform);
 			fireRescaled(this);
 			return this;
@@ -217,7 +217,7 @@ function svgGraphics() {
 		 * @param link - model of a link
 		 */
 		addLink: function (link, pos) {
-			var linkUI = linkBuilder(link);
+			let linkUI = linkBuilder(link);
 			if (!linkUI) {
 				return;
 			}
@@ -239,7 +239,7 @@ function svgGraphics() {
 		 * @param linkUI visual representation of the link created by link() execution.
 		 **/
 		releaseLink: function (link) {
-			var linkUI = allLinks[link.id];
+			let linkUI = allLinks[link.id];
 			if (linkUI) {
 				svgContainer.removeChild(linkUI);
 				delete allLinks[link.id];
@@ -253,7 +253,7 @@ function svgGraphics() {
 		 * @param nodeUI visual representation of the node created by node() execution.
 		 **/
 		addNode: function (node, pos) {
-			var nodeUI = nodeBuilder(node);
+			let nodeUI = nodeBuilder(node);
 			if (!nodeUI) {
 				return;
 			}
@@ -273,7 +273,7 @@ function svgGraphics() {
 		 * @param node graph's node
 		 **/
 		releaseNode: function (node) {
-			var nodeUI = allNodes[node.id];
+			let nodeUI = allNodes[node.id];
 			if (nodeUI) {
 				svgContainer.removeChild(nodeUI);
 				delete allNodes[node.id];
@@ -281,9 +281,9 @@ function svgGraphics() {
 		},
 
 		renderNodes: function () {
-			for (var key in allNodes) {
+			for (let key in allNodes) {
 				if (allNodes.hasOwnProperty(key)) {
-					var nodeUI = allNodes[key];
+					let nodeUI = allNodes[key];
 					cachedPos.x = nodeUI.position.x;
 					cachedPos.y = nodeUI.position.y;
 					nodePositionCallback(nodeUI, cachedPos, nodeUI.node);
@@ -292,9 +292,9 @@ function svgGraphics() {
 		},
 
 		renderLinks: function () {
-			for (var key in allLinks) {
+			for (let key in allLinks) {
 				if (allLinks.hasOwnProperty(key)) {
-					var linkUI = allLinks[key];
+					let linkUI = allLinks[key];
 					cachedFromPos.x = linkUI.position.from.x;
 					cachedFromPos.y = linkUI.position.from.y;
 					cachedToPos.x = linkUI.position.to.x;
@@ -334,7 +334,7 @@ function svgGraphics() {
 	return graphics;
 
 	function createSvgRoot() {
-		var svgRoot = svg('svg');
+		let svgRoot = svg('svg');
 
 		svgContainer = svg('g').attr('buffered-rendering', 'dynamic');
 

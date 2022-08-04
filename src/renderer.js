@@ -5,14 +5,14 @@
  * @author Val Richter (aka ArtInLines) / https://github.com/ArtInLines - modified for System-Landscaper
  */
 
-var eventify = require('ngraph.events');
-var forceDirected = require('ngraph.forcelayout');
-var svgGraphics = require('./svgGraphics.js');
-var windowEvents = require('./Utils/windowEvents.js');
-var domInputManager = require('./Input/domInputManager.js');
-var timer = require('./Utils/timer.js');
-var getDimension = require('./Input/getDimensions.js');
-var dragndrop = require('./Input/dragndrop.js');
+let eventify = require('ngraph.events');
+let forceDirected = require('ngraph.forcelayout');
+let svgGraphics = require('./svgGraphics.js');
+let windowEvents = require('./Utils/windowEvents.js');
+let domInputManager = require('./Input/domInputManager.js');
+let timer = require('./Utils/timer.js');
+let getDimension = require('./Input/getDimensions.js');
+let dragndrop = require('./Input/dragndrop.js');
 const EventManager = require('./Utils/EventManager.js');
 
 /**
@@ -255,8 +255,8 @@ class Renderer extends EventManager {
 		let graphRect = this.layout.getGraphRect();
 		let containerSize = getDimension(this.container);
 
-		var cx = (graphRect.x2 + graphRect.x1) / 2;
-		var cy = (graphRect.y2 + graphRect.y1) / 2;
+		let cx = (graphRect.x2 + graphRect.x1) / 2;
+		let cy = (graphRect.y2 + graphRect.y1) / 2;
 		this.transform.offsetX = containerSize.width / 2 - (cx * this.transform.scale - cx);
 		this.transform.offsetY = containerSize.height / 2 - (cy * this.transform.scale - cy);
 		this.graphics.graphCenterChanged(this.transform.offsetX, this.transform.offsetY);
