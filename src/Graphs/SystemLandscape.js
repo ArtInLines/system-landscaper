@@ -176,7 +176,19 @@ class SystemLandscape extends EventManager {
 		return this.getEdgesCount();
 	}
 
-	// Adding Data
+	// Event Handling
+
+	/**
+	 * This function exists currently purely to integrate with the renderer. Before optimizing this, the renderer would have to be changed as well.
+	 * @param {SystemNode|SystemTree|Edge} element element that updated
+	 * @param {'add'|'update'|'remove'} changeType type of change
+	 */
+	emitChange(element, changeType) {
+		let change = { changeType };
+		if (element instanceof SystemNode) change.node = element;
+		else if (element instanceof Edge) change.edge = element;
+		this.emit('changed', [change]);
+	}
 
 	onVerticalEdgeAdded(edge, parent, child) {
 		this.addEdge(edge);
@@ -184,6 +196,7 @@ class SystemLandscape extends EventManager {
 
 	onVerticalEdgeRemoved(edge, parent, child) {
 		this.edges.splice(this.edges.indexOf(edge), 1);
+		this.emitChange(edge, 'remove');
 	}
 
 	onSystemTreeChanged(systemTree, node) {
@@ -203,6 +216,8 @@ class SystemLandscape extends EventManager {
 		// TODO
 	}
 
+	// Adding Data
+
 	addSystem(name = null, data = {}, parent = null) {
 		if (typeof parent === 'string') parent = this.getSystemByName(parent);
 		let system = new SystemNode(name, parent, data);
@@ -216,12 +231,14 @@ class SystemLandscape extends EventManager {
 			this.addEventListenersToSystemTree(tree);
 		}
 		this.addEventListenersToSystem(system);
+		this.emitChange(system, 'add');
 		return system;
 	}
 
 	addEdge(edge) {
 		this.edges.push(edge);
 		this.emit('edgeAdded', edge, this.isVerticalEdge(edge));
+		this.emitChange(edge, 'add');
 		return edge;
 	}
 
@@ -231,17 +248,17 @@ class SystemLandscape extends EventManager {
 	 * @param {?SystemNode|SystemTree} to SystemNode or SystemTree to which the edge goes to
 	 * @param {any} data Data associated with the edge
 	 */
-	linkSystems(from, to, data) {
+	linkSystems(from, to, data = {}) {
 		let edge = this.getEdge(from, to);
 		if (edge) {
 			edge.changeData(data);
 			return edge;
 		}
 
-		if (typeof from === 'string') from = this.getSystemByName(from);
-		if (typeof to === 'string') to = this.getSystemByName(to);
-		if (!this.hasSystem(from.id)) from = this.addSystem();
-		if (!this.hasSystem(to.id)) to = this.addSystem();
+		from = this.getSystem(from);
+		to = this.getSystem(to);
+		if (!this.hasSystem(from?.id)) from = this.addSystem();
+		if (!this.hasSystem(to?.id)) to = this.addSystem();
 
 		edge = new Edge(from, to, data);
 		this.addEdge(edge);
@@ -261,6 +278,7 @@ class SystemLandscape extends EventManager {
 		this.systemsByID.delete(id);
 		this.systemsByName.delete(sys.name);
 		this.emit('systemRemoved', sys);
+		this.emitChange(sys, 'remove');
 	}
 
 	removeEdge(id, keepBidirectional = true) {
@@ -281,6 +299,7 @@ class SystemLandscape extends EventManager {
 		if (idx === -1) return false;
 		this.edges.splice(idx, 1);
 		this.emit('edgeRemoved', edge, isVertical);
+		this.emitChange(edge, 'remove');
 		return true;
 	}
 
@@ -291,6 +310,7 @@ class SystemLandscape extends EventManager {
 		this.systemsByName.delete(sys.name);
 		this.systemsByName.insert(newName, sys);
 		sys.name = newName;
+		this.emitChange(sys, 'update');
 	}
 
 	updateSystem(id, data) {
@@ -300,12 +320,14 @@ class SystemLandscape extends EventManager {
 			delete data.name;
 		}
 		sys.data = { ...sys.data, ...data };
+		this.emitChange(sys, 'update');
 		return sys;
 	}
 
 	updateEdge(id, data) {
 		let edge = this.getEdgeId(id);
 		edge.data = { ...edge.data, ...data };
+		this.emitChange(edge, 'update');
 		return edge;
 	}
 
@@ -324,6 +346,7 @@ class SystemLandscape extends EventManager {
 			let tree = new SystemTree(system);
 			this.systemTrees.push(tree);
 		}
+		this.emitChange(system, 'update'); // TODO: Test if "update" works here
 	}
 
 	moveEdgeId(id, newSource = null, newTarget = null, keepBidirectional = true) {
@@ -354,7 +377,26 @@ class SystemLandscape extends EventManager {
 		}
 
 		this.emit('edgeMoved', edge, wasVertical, isVertical);
+		this.emitChange(edge, 'update'); // TODO: Test if "update" works here
 		return true;
+	}
+
+	// Looping
+
+	forEachSystem(callback) {
+		return this.forEachNode(callback);
+	}
+
+	forEachNode(callback) {
+		this.systemsByID.forEach((node) => callback(node));
+	}
+
+	forEachEdge(callback) {
+		this.edges.forEach((edge) => callback(edge));
+	}
+
+	forEachLink(callback) {
+		return this.forEachEdge(callback);
 	}
 
 	// Positioning
@@ -402,4 +444,4 @@ class SystemLandscape extends EventManager {
 	}
 }
 
-module.exports = SystemLandscape;
+module.exports = () => new SystemLandscape();

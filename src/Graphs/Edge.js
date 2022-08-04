@@ -25,6 +25,14 @@ class Edge extends EventManager {
 		this.on('dataChanged', (...args) => this.emit('update', ...args));
 	}
 
+	get fromId() {
+		return this.source.id;
+	}
+
+	get toId() {
+		return this.target.id;
+	}
+
 	setSource(source) {
 		this.source = source;
 		this.emit('sourceChanged', source, this);

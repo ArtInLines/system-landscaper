@@ -46,6 +46,7 @@ function constant(graph, userSettings) {
 		layoutNodes = typeof Object.create === 'function' ? Object.create(null) : {},
 		ensureNodeInitialized = function (node) {
 			if (!layoutNodes[node.id]) layoutNodes[node.id] = placeNodeCallback(node);
+			// console.log({ layoutNodes });
 			updateGraphRect(layoutNodes[node.id], graphRect);
 		},
 		updateNodePositions = function () {
