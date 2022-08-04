@@ -1,12 +1,21 @@
-const graph = SystemLandscaper.graph();
+const sl = SystemLandscaper.graph();
 
-// Not necessary to init systems before linking them
-// graph.addSystem('A');
-// graph.addSystem('B');
-graph.linkSystems('A', 'B');
+sl.addSystem('A');
+sl.addSystem('B');
+sl.addSystem('C', null, 'A');
+sl.addSystem('D', null, 'A');
+sl.addSystem('E', null, 'C');
+sl.addSystem('F', null, 'C');
 
-const renderer = SystemLandscaper.renderer(graph, {
-	layout: SystemLandscaper.Layout.interactive(graph, {}),
-	graphics: SystemLandscaper.svgGraphics(),
-});
-renderer.run(10);
+sl.linkSystems('C', 'B');
+sl.linkSystemsUndirected('E', 'F');
+sl.moveEdge(sl.getEdge('C', 'B'), 'A');
+sl.updateSystemName('C', 'C2');
+sl.moveSystem('C2', 'B');
+
+sl.updateSystemName('D', 'D2');
+
+sl.removeEdge(sl.getEdge('E', 'F'), false);
+
+const renderer = SystemLandscaper.renderer(sl);
+renderer.run();

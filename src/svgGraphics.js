@@ -15,6 +15,7 @@ var domInputManager = require('./Input/domInputManager.js');
  * layout, but only visualizes nodes and edges of the graph.
  */
 function svgGraphics() {
+	// TODO: Let settings be passed in the constructor, so the user can customize them
 	var svgContainer,
 		svgRoot,
 		offsetX = 0,
@@ -23,16 +24,16 @@ function svgGraphics() {
 		actualScale = 1,
 		allNodes = {},
 		allLinks = {},
+		nodeLength = 30,
 		/*jshint unused: false */
 		nodeBuilder = function (node) {
-			return svg('rect').attr('width', 10).attr('height', 10).attr('fill', '#00a2e8');
+			return svg('rect').attr('width', nodeLength).attr('height', nodeLength).attr('fill', '#00a2e8');
 		},
 		nodePositionCallback = function (nodeUI, pos) {
-			// TODO: Remove magic 5. It should be half of the width or height of the node.
-			nodeUI.attr('x', pos.x - 5).attr('y', pos.y - 5);
+			nodeUI.attr('x', pos.x - nodeLength / 2).attr('y', pos.y - nodeLength / 2);
 		},
 		linkBuilder = function (link) {
-			return svg('line').attr('stroke', '#999');
+			return svg('line').attr('stroke', '#111');
 		},
 		linkPositionCallback = function (linkUI, fromPos, toPos) {
 			linkUI.attr('x1', fromPos.x).attr('y1', fromPos.y).attr('x2', toPos.x).attr('y2', toPos.y);

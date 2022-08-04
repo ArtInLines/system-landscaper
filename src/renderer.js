@@ -64,7 +64,7 @@ const EventManager = require('./Utils/EventManager.js');
 
 /** @type {rendererSettings} */
 const defaultSettings = {
-	layout: require('ngraph.forcelayout'),
+	layout: require('./Layout/interactive.js'),
 	graphics: require('./svgGraphics.js'),
 	container: document.body,
 	interactive: true,
@@ -85,8 +85,8 @@ class Renderer extends EventManager {
 
 		settings = { ...defaultSettings, ...settings };
 
-		this.layout = settings.layout;
-		this.graphics = settings.graphics;
+		this.layout = settings.layout(graph, settings);
+		this.graphics = settings.graphics();
 		this.container = settings.container;
 		this.interactive = settings.interactive;
 		this.renderLinks = settings.renderLinks;
