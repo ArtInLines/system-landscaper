@@ -63,6 +63,51 @@ class Tree extends EventManager {
 	}
 
 	/**
+	 * Check if this Tree-Node is a leaf - i.e. has no children.
+	 * @returns {Boolean}
+	 */
+	isLeaf() {
+		return this.children.length === 0;
+	}
+
+	/**
+	 * Check if this Tree-Node is the root of its tree - i.e. it has no parent.
+	 * @returns {Boolean}
+	 */
+	isRoot() {
+		return this.parent === null;
+	}
+
+	/**
+	 * Check if the node has any siblings - i.e. it's not the only child of its parent.
+	 * @returns {Boolean}
+	 */
+	hasSiblings() {
+		if (this.parent === null) return false;
+		return this.parent.children.length > 1;
+	}
+
+	/**
+	 * Check if the node has any siblings to its left
+	 * @returns {Boolean}
+	 */
+	hasLeftSibling() {
+		if (this.parent === null) return false;
+		// Only the left-most child has no left sibling
+		return this.parent.children[0] !== this;
+	}
+
+	/**
+	 * Check if the node has any siblings to its right
+	 * @returns {Boolean}
+	 */
+	hasRightSibling() {
+		if (this.parent === null) return false;
+		// Only the right-most child has no right sibling
+		return this.parent.children[this.parent.children.length - 1] !== this;
+	}
+
+	/**
 	 * Get all nodes in the tree, that are in startLayer, endLayer or any layer in between. The layers are counted from this node onward. That is done to implement this method recursively, as users will mainly call it from the root only anyways.
 	 
 	 If startLayer is 0, this node is included in the result as well.
@@ -106,6 +151,18 @@ class Tree extends EventManager {
 		child.parent = this;
 		this.children.push(child);
 		return child;
+	}
+
+	/**
+	 * Move a child-node to a new index in the children-array. This is specifically useful when children-order matters, like with certain tree-drawing algorithms.
+	 * @param {Tree | Number} child The child to move or its ID.
+	 * @param {Number} idx The new index that the child should be moved to.
+	 * @returns
+	 */
+	moveChildToIdx(child, idx) {
+		if (this.removeChild(child.id) === null) return false;
+		this.children.splice(idx, 0, child);
+		return true;
 	}
 
 	/**

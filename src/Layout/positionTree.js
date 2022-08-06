@@ -6,14 +6,16 @@
  * @property {number} subtreeSeperation The distance between subtree-nodes in relative x-coordinates. This is usually slightly larger than siblingSeperation.
  */
 
+const Tree = require('../Utils/Tree');
+
 /**
  * Get the position for all nodes in a Tree, such that the Tree is aesthetically arranged. This is an implementation of the Walker's algorithm: https://www.cs.unc.edu/techreports/89-034.pdf. It works on general trees, not just binary trees.
- * @param {SystemNode} root Root of the (Sub)Tree
+ * @param {Tree} root Root of the (Sub)Tree
  * @param {positionTreeOpts} opts Options for the positionTree function. These are treated as constants by the function and are not changed.
  */
 function positionTree(root, opts = { levelSeperation, maxDepth, siblingSeperation, subtreeSeperation }) {
 	// Initialize the list of previous nodes at each level.
-	initPrevNodeList();
+	initPrevNodes();
 
 	// Do the preliminary positioning with a postorder walk
 	firstWalk(root, 0, opts);
@@ -23,5 +25,25 @@ function positionTree(root, opts = { levelSeperation, maxDepth, siblingSeperatio
 	let yTopAdjustment = ycoord(root, opts);
 
 	// Do the final positioning with a preorder walk
-	return seconWalk(root, 0, 0, xTopAdjustment, yTopAdjustment, opts);
+	return secondWalk(root, 0, 0, xTopAdjustment, yTopAdjustment, opts);
+}
+
+function initPrevNodes(node, parent, level, opts) {
+	let T = new Tree(null, { node: root, level: 0, prevNode: null });
+	// TODO: Recursive implementation
+	if (level === opts.maxDepth) return T;
+}
+
+/**
+ *
+ * @param {Tree} node
+ * @param {Number} level
+ * @param {positionTreeOpts} opts
+ */
+function firstWalk(node, level, opts) {
+	if (node.isLeaf() || level >= opts.maxDepth) {
+		if (node.hasLeftSibling()) {
+		} else {
+		}
+	}
 }
