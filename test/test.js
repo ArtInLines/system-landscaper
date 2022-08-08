@@ -17,5 +17,16 @@ sl.updateSystemName('D', 'D2');
 
 // sl.removeEdge(sl.getEdge('E', 'F'), false);
 
-const renderer = SystemLandscaper.renderer(sl);
-renderer.run(10);
+const layouts = [SystemLandscaper.Layout.interactive, SystemLandscaper.Layout.constant];
+let layoutIndex = 0;
+const renderer = SystemLandscaper.renderer(sl, { layout: layouts[0] });
+
+document.addEventListener('keyup', (e) => {
+	if (e.key === 'g') {
+		layoutIndex = (layoutIndex + 1) % layouts.length;
+		console.log({ layoutIndex });
+		renderer.changeLayout(layouts[layoutIndex]);
+	}
+});
+
+renderer.run();

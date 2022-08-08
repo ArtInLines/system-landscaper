@@ -53,6 +53,13 @@ const EventManager = require('./Utils/EventManager.js');
  */
 
 /**
+ * @typedef {Object} layoutSettings
+ * @property {number} maxX Maximum x-coordinate for nodes in the graph
+ * @property {number} maxY Maximum y-coordinate for nodes in the graph
+ * @property {any} seed Seed for random number generator
+ */
+
+/**
  * @typedef {Object} rendererSettings
  * @property {any} layout - Layout algorithm to be used. The algorithm is expected to comply with defined interface and is expected to be iterative. Renderer will use it then to calculate graph's layout. For examples of the interface refer to Viva.Graph.Layout.forceDirected()
  * @property {any} graphics - Graphics module that is used to render nodes and links.
@@ -60,6 +67,7 @@ const EventManager = require('./Utils/EventManager.js');
  * @property {boolean|('node'|'scroll'|'drag')} interactive - Defines whether graph can respond to user input. Defaults to `true`. When set to a string, then only the specified action is interactive
  * @property {boolean} renderLinks - Directs renderer to display links. Defaults to `true`
  * @property {number} prerender - Number of layout iterations to run before displaying the graph. The bigger you set this number the closer to the ideal position the graph will appear first time. But be careful: for large graphs it can freeze the browser. Defaults to `0`.
+ * @property {layoutSettings} layoutSettings Settings for the Layout class
  */
 
 /** @type {rendererSettings} */
@@ -70,7 +78,21 @@ const defaultSettings = {
 	interactive: true,
 	renderLinks: true,
 	prerender: 0,
+	layoutSettings: {
+		maxX: 1024,
+		maxY: 1024,
+		seed: 'seed',
+	},
 };
+
+// Necessary API for Layout:
+// - getGraphRect()
+// - getLinkPosition(linkId)
+// - getNodePosition(nodeId)
+// - isNodePinned(node)
+// - pinNode(node, wasPinned)
+// - setNodePosition(nodeId, x, y)
+// - dispose
 
 class Renderer extends EventManager {
 	/**
@@ -85,7 +107,8 @@ class Renderer extends EventManager {
 
 		settings = { ...defaultSettings, ...settings };
 
-		this.layout = settings.layout(graph, settings);
+		this.layoutSettings = settings.layoutSettings;
+		this.layout = settings.layout(graph, this.layoutSettings);
 		this.graphics = settings.graphics();
 		this.container = settings.container;
 		this.interactive = settings.interactive;
@@ -104,29 +127,6 @@ class Renderer extends EventManager {
 			scale: 1,
 		};
 		this.containerDrag;
-	}
-
-	// TODO: Update the following Getters to be actual getters
-
-	/**
-	 * Returns current transformation matrix.
-	 */
-	getTransform() {
-		return transform;
-	}
-
-	/**
-	 * Gets current graphics object
-	 */
-	getGraphics() {
-		return graphics;
-	}
-
-	/**
-	 * Gets current layout.
-	 */
-	getLayout() {
-		return this.layout;
 	}
 
 	/**
@@ -155,7 +155,7 @@ class Renderer extends EventManager {
 	}
 
 	reset() {
-		graphics.resetScale();
+		this.graphics.resetScale();
 		this._updateCenter();
 		this.transform.scale = 1;
 	}
@@ -168,6 +168,14 @@ class Renderer extends EventManager {
 	resume() {
 		this.isPaused = false;
 		this.animationTimer.restart();
+	}
+
+	changeLayout(newLayout) {
+		this.layout = newLayout(this.graph, this.layoutSettings);
+		console.log(this.layout);
+		this._listenToEvents();
+		this.rerender();
+		this._renderIterations();
 	}
 
 	rerender() {
@@ -218,7 +226,7 @@ class Renderer extends EventManager {
 	}
 
 	_onRenderFrame() {
-		this.isStable = this.getLayout().step() && !this.userInteraction;
+		this.isStable = this.layout.step() && !this.userInteraction;
 		this._renderGraph();
 
 		return !this.isStable;
@@ -370,6 +378,7 @@ class Renderer extends EventManager {
 	}
 
 	_onWindowResized() {
+		console.log(this);
 		this._updateCenter();
 		this._onRenderFrame();
 	}
@@ -403,7 +412,7 @@ class Renderer extends EventManager {
 	}
 
 	_listenToEvents() {
-		windowEvents.on('resize', this._onWindowResized);
+		windowEvents.on('resize', () => this._onWindowResized);
 
 		this._releaseContainerDragManager();
 		if (this._isInteractive('drag')) {
@@ -435,7 +444,7 @@ class Renderer extends EventManager {
 		this.rendererInitialized = false;
 		this._releaseGraphEvents();
 		this._releaseContainerDragManager();
-		windowEvents.off('resize', this._onWindowResized);
+		windowEvents.off('resize', () => this._onWindowResized);
 		this.off();
 		this.animationTimer.stop();
 
