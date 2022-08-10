@@ -1,469 +1,410 @@
+const EventManager = require('./Utils/EventManager');
+const Coordinate = require('./Geom/Coordinate');
+const svg = require('./Utils/svgHelper');
+const { randLayout, randSingleLayout } = require('./Layout/randLayout');
+const SingleLayerView = require('./Views/SingleLayerView');
+const dragndrop = require('./Input/dragndrop');
+
+const timer = require('./Utils/timer');
 /**
- * @fileOverview Defines a graph renderer that uses CSS based drawings.
- *
- * @author Andrei Kashcha (aka anvaka) / https://github.com/anvaka
- * @author Val Richter (aka ArtInLines) / https://github.com/ArtInLines - modified for System-Landscaper
+ * @typedef {object} timerRes
+ * @property {function} stop
+ * @property {function} restart
+ */
+/**
+ * @typedef {function} timer
+ * @param {?function} callback
+ * @returns {timerRes}
  */
 
-let eventify = require('ngraph.events');
-let forceDirected = require('ngraph.forcelayout');
-let svgGraphics = require('./svgGraphics.js');
-let windowEvents = require('./Utils/windowEvents.js');
-let domInputManager = require('./Input/domInputManager.js');
-let timer = require('./Utils/timer.js');
-let getDimension = require('./Input/getDimensions.js');
-let dragndrop = require('./Input/dragndrop.js');
-const EventManager = require('./Utils/EventManager.js');
+// For JSDocs:
+const SystemLandscape = require('./Graphs/SystemLandscape');
+const SystemTree = require('./Graphs/SystemTree');
+const SystemNode = require('./Graphs/SystemNode');
+const Edge = require('./Graphs/Edge');
+const View = require('./Views/View');
 
-/**
- * This is heart of the rendering. Class accepts graph to be rendered and rendering settings.
- * It monitors graph changes and depicts them accordingly.
- *
- * @param graph - Viva.Graph.graph() object to be rendered.
- * @param settings - rendering settings, composed from the following parts (with their defaults shown):
- *   settings = {
- *     // Represents a module that is capable of displaying graph nodes and links.
- *     // all graphics has to correspond to defined interface and can be later easily
- *     // replaced for specific needs (e.g. adding WebGL should be piece of cake as long
- *     // as WebGL has implemented required interface). See svgGraphics for example.
- *     graphics : Viva.Graph.View.svgGraphics(),
- *
- *     // Where the renderer should draw graph. Container size matters, because
- *     // renderer will attempt center graph to that size. Also graphics modules
- *     // might depend on it.
- *     container : document.body,
- *
- *     // Defines whether graph can respond to use input
- *     interactive: true,
- *
- *     // Layout algorithm to be used. The algorithm is expected to comply with defined
- *     // interface and is expected to be iterative. Renderer will use it then to calculate
- *     // graph's layout. For examples of the interface refer to Viva.Graph.Layout.forceDirected()
- *     layout : Viva.Graph.Layout.forceDirected(),
- *
- *     // Directs renderer to display links. Usually rendering links is the slowest part of this
- *     // library. So if you don't need to display links, consider settings this property to false.
- *     renderLinks : true,
- *
- *     // Number of layout iterations to run before displaying the graph. The bigger you set this number
- *     // the closer to ideal position graph will appear first time. But be careful: for large graphs
- *     // it can freeze the browser.
- *     prerender : 0
- *   }
- */
+// Wanted API:
+// - run(layout?)
+//		Initialize Renderer & start rendering loop
+//		layout determines the initial layout-function to be called to give the nodes their initial position
+// - pause()
+// - resume()
+// - changeView(view)
+//		Changes the View to a specified `view`
+//		The view specifies which nodes are visible
+//		The view also specifies how vertical links between nodes should be visualized
+//		The View determines how nodes / edges are drawn
+//		Further customizations might be added by the view (later)
+// - runLayout(layout)
+//		Calls a layout function
+//		The function should return a mapping from nodeIds to new (x,y)-coordinates for them
+// - zoomIn()
+// - zoomOut()
+// - selectNode(nodeId)
+// - moveNode(nodeId, x, y)
+// - moveEdge() / shapeEdge() / something like that to create curves
+// - moveCamera(x, y)
+// - centerCamera(id)
+//		centers camera on specified node / systemTree / graph
+//		if undefined, centers on graph
+// - drawNode(node, x, y)
 
-/**
- * @typedef {Object} layoutSettings
- * @property {number} maxX Maximum x-coordinate for nodes in the graph
- * @property {number} maxY Maximum y-coordinate for nodes in the graph
- * @property {any} seed Seed for random number generator
- */
+// UI-Handling:
+// - on node clicked
+// - on edge clicked
+//		If trees are drawn with groupings around the nodes, listen to those spaces being clicked too
+// - on node drag-and-dropped
+// For later
+// 		Edge moved or drawn differently
+
+// Events to allow listeners for:
+// - nodeSelected
+// - edgeSelected
+// - nodeMoved
+
+// Events the Renderer listens to (emitted by system-landscape):
+// - newNode
+// - newEdge
+// - updated / removed node or edge
 
 /**
  * @typedef {Object} rendererSettings
- * @property {any} layout - Layout algorithm to be used. The algorithm is expected to comply with defined interface and is expected to be iterative. Renderer will use it then to calculate graph's layout. For examples of the interface refer to Viva.Graph.Layout.forceDirected()
- * @property {any} graphics - Graphics module that is used to render nodes and links.
- * @property {HTMLElement} container - Where the renderer should draw graph. Container size matters, because renderer will attempt center graph to that size. Also graphics modules might depend on it.
- * @property {boolean|('node'|'scroll'|'drag')} interactive - Defines whether graph can respond to user input. Defaults to `true`. When set to a string, then only the specified action is interactive
- * @property {boolean} renderLinks - Directs renderer to display links. Defaults to `true`
- * @property {number} prerender - Number of layout iterations to run before displaying the graph. The bigger you set this number the closer to the ideal position the graph will appear first time. But be careful: for large graphs it can freeze the browser. Defaults to `0`.
- * @property {layoutSettings} layoutSettings Settings for the Layout class
+ * @property {number} frameInterval number of milliseconds to wait between rendering each frame. Defaults to 30.
+ * @property {HTMLElement} container Container elemnent, in which the svg-container is added.
+ * @property {?Coordinate} maxSize Maximum rectangle size. Defaults to the whole size of `container`.
+ * @property {View} view View to use for rendering.
+ * @property {layout} newNodeLayout Function to use for finding the position of a single new node.
  */
 
 /** @type {rendererSettings} */
 const defaultSettings = {
-	layout: require('./Layout/interactive.js'),
-	graphics: require('./svgGraphics.js'),
+	frameInterval: 30,
 	container: document.body,
-	interactive: true,
-	renderLinks: true,
-	prerender: 0,
-	layoutSettings: {
-		maxX: 1024,
-		maxY: 1024,
-		seed: 'seed',
-	},
+	maxSize: null,
+	view: new SingleLayerView(0),
+	newNodeLayout: randSingleLayout,
 };
-
-// Necessary API for Layout:
-// - getGraphRect()
-// - getLinkPosition(linkId)
-// - getNodePosition(nodeId)
-// - isNodePinned(node)
-// - pinNode(node, wasPinned)
-// - setNodePosition(nodeId, x, y)
-// - dispose
 
 class Renderer extends EventManager {
 	/**
-	 * @param {Graph} graph - Graph to be rendered.
-	 * @param {rendererSettings} settings - Rendering settings.
+	 * @param {SystemLandscape} graph Graph to render
+	 * @param {rendererSettings} settings Optional Settings that can be adjusted
 	 */
-	constructor(graph, settings) {
+	constructor(graph, settings = {}) {
 		super();
-		this.FRAME_INTERVAL = 30;
-
-		this.graph = graph;
-
 		settings = { ...defaultSettings, ...settings };
 
-		this.layoutSettings = settings.layoutSettings;
-		this.layout = settings.layout(graph, this.layoutSettings);
-		this.graphics = settings.graphics();
-		this.container = settings.container;
-		this.interactive = settings.interactive;
-		this.renderLinks = settings.renderLinks;
-		this.prerender = settings.prerender;
-		this.inputManager = (this.graphics.inputManager || domInputManager)(this.graph, this.graphics);
-		this.animationTimer;
-		this.isInitialized = false;
-		this.updateCenterRequired = true;
-		this.isStable = false;
+		// TODO:
+		this.nodeLength = 30; // How big should the nodes be drawn???
+		this.drawnNodes = new Map(); // Map<ID, SVG-Element>
+		this.drawnEdges = new Map(); // Map<ID, SVG-Element>
 		this.userInteraction = false;
-		this.isPaused = false;
-		this.transform = {
-			offsetX: 0,
-			offsetY: 0,
-			scale: 1,
-		};
-		this.containerDrag;
+		this.newNodeLayout = settings.newNodeLayout;
+
+		/** @type {SystemLandscape} System-Landscape-Graph to render */
+		this.graph = graph;
+		/** @type {View} Current View */
+		this.view = settings.view.init(this.graph); // TODO: Set view
+		/** @type {Map<Number, Coordinate>} Maps NodeIds to their nodes' coordinates */
+		this.nodePositions = new Map();
+
+		/** @type {HTMLElement} */
+		this.container = settings.container;
+		/** @type {SVGSVGElement} The top svg-root element */
+		this.svgRoot = svg.createEl('svg');
+		/** @type {SVGGraphicsElement} The top container element, direct child of svgRoot */
+		this.svgContainer = svg.createEl('g');
+		/** TODO: Refactor dragndrop */
+		this.dragContainer = dragndrop(this.container);
+
+		/** @type {number} Factor indicating how far we are zoomed in/out of the system-map */
+		this.zoomFactor = 1;
+		/** @type {Coordinate} camera offset */
+		this.offset = new Coordinate(0, 0);
+
+		/** @type {Coordinate} Maximum Size for the svg-container to take up */
+		this.maxSize = this._setMaxSizeHelper(settings.maxSize);
+		/** @type {number} How many ms to wait between rendering frames */
+		this.frameInterval = settings.frameInterval;
+
+		/** @type {boolean} Indicates whether the Render has been started to run */
+		this.isInitialized = false;
+	}
+
+	_init() {
+		// Add HTML-Elements to DOM
+		svg.setAttr(this.svgContainer, 'buffered-rendering', 'dynamic');
+		this.svgRoot.appendChild(this.svgContainer);
+		this.container.appendChild(this.svgRoot);
+
+		// Initialize SVG-Stuff
+		this._transform();
+		let defs = svg.append(this.svgRoot, 'defs'); // Create <defs> element for definitions
+		svg.append(defs, svg.createArrowMarker(this.nodeLength, 'Arrow'));
+
+		// Initialize Event-Listeners
+		window.addEventListener('resize', this._onResize.bind(this));
+		this._setViewListeners();
+		// TODO: Let the following event-listeners be changeable by the user
+		this.dragContainer.onDrag((e, offset) => {
+			this._translateRel(offset);
+			this._render();
+		});
+		this.dragContainer.onScroll((e, scaleOffset, scrollPoint) => {
+			this._scale(scaleOffset < 0, scrollPoint);
+		});
+
+		// TODO: Listen to changes in the graph and update accordingly
+
+		this._resetVisible();
+	}
+
+	_resetVisible() {
+		this.drawnNodes.clear();
+		this.drawnEdges.clear();
+		this.nodePositions.clear();
+
+		let nodes = this.getVisibleNodes();
+		nodes.forEach((node) => {
+			this._addNode(node);
+		});
+		let edges = this.view.getVisibleEdges();
+		edges.forEach((edge) => {
+			if (this.drawnNodes.has(edge.source.id) && this.drawnNodes.has(edge.target.id)) this._addEdge(edge);
+			// TODO
+		});
 	}
 
 	/**
-	 * Performs rendering of the graph.
-	 *
-	 * @param iterationsCount if specified renderer will run only given number of iterations
-	 * and then stop. Otherwise graph rendering is performed indefinitely.
-	 *
-	 * Note: if rendering stopped by used started dragging nodes or new nodes were added to the
-	 * graph renderer will give run more iterations to reflect changes.
+	 * Only used in the constructor to set the maxSize
+	 * @returns {Coordinate}
 	 */
-	run(iterationsCount) {
-		if (!this.isInitialized) {
-			this._prerender();
+	_setMaxSizeHelper(obj) {
+		if (obj === null) return new Coordinate(this.container.clientWidth, this.container.clientHeight);
+		if (obj instanceof Coordinate) return obj;
+		let x = obj?.x ?? obj[0];
+		let y = obj?.y ?? obj[1];
+		return new Coordinate(x, y);
+	}
 
-			this._initDom();
-			this._updateCenter();
-			this._listenToEvents();
+	/**
+	 * Get a list of all systemNodes, that are visible in the current view
+	 * @returns {Array<SystemNode>}
+	 */
+	getVisibleNodes() {
+		return this.view.getVisibleNodes();
+	}
 
-			this.isInitialized = true;
+	// layout(nodes::Array/Set<SystemNode>, grouping::NodeGroup, currentNodePositions::Map<ID, (x,y)-Coordinate>, maxSize)
+	//		Returns Map<ID, (x,y)-Coordinate>
+	run(layout = randLayout) {
+		if (!this.isInitialized) this._init();
+
+		if (typeof layout === 'function') {
+			this.nodePositions = layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxSize);
 		}
-
-		this._renderIterations(iterationsCount);
-
-		return this;
+		this._render();
 	}
 
-	reset() {
-		this.graphics.resetScale();
-		this._updateCenter();
-		this.transform.scale = 1;
+	/**
+	 * Change the View to another
+	 * @param {View} View New View
+	 */
+	changeView(View) {
+		this.view = View.init(this.graph);
+		this._resetVisible();
+		this._rmViewListeners();
+		this._setViewListeners();
+		// TODO: ???
 	}
 
-	pause() {
-		this.isPaused = true;
-		this.animationTimer.stop();
+	_setViewListeners() {
+		this.view
+			.on('node-add', (node) => {
+				this._addNode(node);
+			})
+			.on('node-update')
+			.on('node-remove', (node) => {
+				this._rmNode(node);
+			})
+			.on('edge-add', (edge) => {
+				this._addEdge(edge);
+			})
+			.on('edge-update')
+			.on('edge-remove')
+			.on('group-add')
+			.on('group-update')
+			.on('group-remove');
 	}
 
-	resume() {
-		this.isPaused = false;
-		this.animationTimer.restart();
+	_rmViewListeners() {
+		this.view.off(null);
 	}
 
-	changeLayout(newLayout) {
-		this.layout = newLayout(this.graph, this.layoutSettings);
-		console.log(this.layout);
-		this._listenToEvents();
-		this.rerender();
-		this._renderIterations();
-	}
-
-	rerender() {
-		this._renderGraph();
-		return this;
-	}
-
-	zoomOut() {
-		return this._scale(true);
+	runLayout(layout) {
+		this.nodePositions = layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxSize);
+		this._render();
 	}
 
 	zoomIn() {
-		return this._scale(false);
+		this._scale(false);
+	}
+
+	zoomOut() {
+		this._scale(true);
 	}
 
 	/**
-	 * Centers renderer at x,y graph's coordinates
+	 * Apply a transformation matrix to this renderer's svg-container. This is used to zoom in/out and move around in the system-map.
+	 * @param {number} a Defaults to `this.zoomFactor`
+	 * @param {number} b Defaults to 0
+	 * @param {number} c Defaults to 0
+	 * @param {number} d Defaults to `this.zoomFactor`
+	 * @param {number} e Defaults to `this.offset.x`
+	 * @param {number} f Defaults to `this.offset.y`
 	 */
-	moveTo(x, y) {
-		this.graphics.graphCenterChanged(transform.offsetX - x * transform.scale, transform.offsetY - y * transform.scale);
-		this._renderGraph();
+	_transform(a = this.zoomFactor, b = 0, c = 0, d = this.zoomFactor, e = this.offset.x, f = this.offset.y) {
+		let transform = `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`;
+		svg.setAttr(this.svgContainer, 'transform', transform);
 	}
 
-	/**
-	 * Removes this renderer and deallocates all resources/timers
-	 */
-	dispose() {
-		this._stopListenToEvents(); // I quit!
+	_translateRel(offset) {
+		let p = this.svgRoot.createSVGPoint();
+		p.x = offset.x;
+		p.y = offset.y;
+		let t = this.svgContainer.getCTM();
+		let origin = this.svgRoot.createSVGPoint().matrixTransform(t.inverse());
+
+		p = p.matrixTransform(t.inverse());
+		p.x = (p.x - origin.x) * t.a;
+		p.y = (p.y - origin.y) * t.d;
+
+		t.e += p.x;
+		t.f += p.y;
+		this._transform(t.a, 0, 0, t.d, t.e, t.f);
 	}
 
-	/**
-	 * Checks whether given interaction (node/scroll) is enabled
-	 */
-	_isInteractive(interactionName) {
-		if (typeof this.interactive === 'string') {
-			return this.interactive.indexOf(interactionName) >= 0;
-		} else return this.interactive;
-	}
-
-	_renderGraph() {
-		this.graphics.beginRender();
-
-		// TODO: move this check graphics
-		if (this.renderLinks) this.graphics.renderLinks();
-
-		this.graphics.renderNodes();
-		this.graphics.endRender();
-	}
-
-	_onRenderFrame() {
-		this.isStable = this.layout.step() && !this.userInteraction;
-		this._renderGraph();
-
-		return !this.isStable;
-	}
-
-	_renderIterations(iterationsCount) {
-		if (this.animationTimer) return;
-
-		if (typeof iterationsCount === 'number') {
-			this.animationTimer = timer(() => {
-				iterationsCount -= 1;
-				if (iterationsCount < 0) return false;
-				else return this._onRenderFrame();
-			}, this.FRAME_INTERVAL);
-		} else {
-			this.animationTimer = timer(() => this._onRenderFrame(), this.FRAME_INTERVAL);
-		}
-	}
-
-	_resetStable() {
-		if (this.isPaused) return;
-
-		this.isStable = false;
-		this.animationTimer.restart();
-	}
-
-	_prerender() {
-		// To get good initial positions for the graph
-		// perform several prerender steps in background.
-		for (let i = 0; i < this.prerender; i += 1) layout.step();
-	}
-
-	_updateCenter() {
-		let graphRect = this.layout.getGraphRect();
-		let containerSize = getDimension(this.container);
-
-		let cx = (graphRect.x2 + graphRect.x1) / 2;
-		let cy = (graphRect.y2 + graphRect.y1) / 2;
-		this.transform.offsetX = containerSize.width / 2 - (cx * this.transform.scale - cx);
-		this.transform.offsetY = containerSize.height / 2 - (cy * this.transform.scale - cy);
-		this.graphics.graphCenterChanged(this.transform.offsetX, this.transform.offsetY);
-
-		this.updateCenterRequired = false;
-	}
-
-	_createNodeUi(node) {
-		let nodePosition = this.layout.getNodePosition(node.id);
-		this.graphics.addNode(node, nodePosition);
-	}
-
-	_removeNodeUi(node) {
-		this.graphics.releaseNode(node);
-	}
-
-	_createLinkUi(link) {
-		let linkPosition = this.layout.getLinkPosition(link.id);
-		this.graphics.addLink(link, linkPosition);
-	}
-
-	_removeLinkUi(link) {
-		this.graphics.releaseLink(link);
-	}
-
-	_listenNodeEvents(node) {
-		if (!this._isInteractive('node')) return;
-
-		let wasPinned = false;
-
-		// TODO: This may not be memory efficient. Consider reusing handlers object.
-		this.inputManager.bindDragNDrop(node, {
-			onStart: () => {
-				wasPinned = this.layout.isNodePinned(node);
-				this.layout.pinNode(node, true);
-				this.userInteraction = true;
-				this._resetStable();
-			},
-			onDrag: (e, offset) => {
-				let oldPos = this.layout.getNodePosition(node.id);
-				this.layout.setNodePosition(node.id, oldPos.x + offset.x / this.transform.scale, oldPos.y + offset.y / this.transform.scale);
-				this.userInteraction = true;
-
-				this._renderGraph();
-			},
-			onStop: () => {
-				this.layout.pinNode(node, wasPinned);
-				this.userInteraction = false;
-			},
-		});
-	}
-
-	_releaseNodeEvents(node) {
-		this.inputManager.bindDragNDrop(node, null);
-	}
-
-	_initDom() {
-		this.graphics.init(this.container);
-		this.graph.forEachNode((node) => this._createNodeUi(node));
-
-		if (this.renderLinks) this.graph.forEachLink((link) => this._createLinkUi(link));
-	}
-
-	_releaseDom() {
-		this.graphics.release(this.container);
-	}
-
-	_processNodeChange(change) {
-		let node = change.node;
-
-		switch (change.changeType) {
-			case 'add':
-				this._createNodeUi(node);
-				this._listenNodeEvents(node);
-				if (this.updateCenterRequired) this._updateCenter();
-				break;
-			case 'remove':
-				this._releaseNodeEvents(node);
-				this._removeNodeUi(node);
-				if (this.graph.getNodesCount() === 0) this.updateCenterRequired = true; // Next time when node is added - center the graph.
-				break;
-			case 'update':
-				this._releaseNodeEvents(node);
-				this._removeNodeUi(node);
-				this._createNodeUi(node);
-				this._listenNodeEvents(node);
-				break;
-		}
-	}
-
-	_processLinkChange(change) {
-		if (!this.renderLinks) return;
-		switch (change.changeType) {
-			case 'add':
-				this._createLinkUi(change.link);
-				break;
-			case 'remove':
-				this._removeLinkUi(change.link);
-				break;
-			case 'update':
-				throw 'Update type is not implemented. TODO: Implement me!';
-		}
-	}
-
-	_onGraphChanged(changes) {
-		for (let change of changes) {
-			if (change.node) this._processNodeChange(change);
-			else if (change.link) this._processLinkChange(change);
-		}
-		this._resetStable();
-	}
-
-	_onWindowResized() {
-		console.log(this);
-		this._updateCenter();
-		this._onRenderFrame();
-	}
-
-	_releaseContainerDragManager() {
-		if (this.containerDrag) {
-			this.containerDrag.release();
-			this.containerDrag = null;
-		}
-	}
-
-	_releaseGraphEvents() {
-		this.graph.off('changed', this._onGraphChanged);
-	}
-
-	_scale(out, scrollPoint) {
-		if (!scrollPoint) {
-			let containerSize = getDimension(container);
+	_scale(out, scrollPoint = null) {
+		if (!scrollPoint)
 			scrollPoint = {
-				x: containerSize.width / 2,
-				y: containerSize.height / 2,
+				x: this.maxSize.x / 2,
+				y: this.maxSize.y / 2,
 			};
-		}
+		// TODO: Let user change this formula via settings, to allow for slower/faster scaling
 		let scaleFactor = Math.pow(1 + 0.4, out ? -0.2 : 0.2);
-		this.transform.scale = this.graphics.scale(scaleFactor, scrollPoint);
+		let p = this.svgRoot.createSVGPoint();
+		p.x = scrollPoint.x;
+		p.y = scrollPoint.y;
+		// Translate to SVG coordinates
+		p = p.matrixTransform(this.svgContainer.getCTM().inverse());
 
-		this._renderGraph();
-		this.emit('scale', this.transform.scale);
+		// Compute new scale matrix in current mouse position
+		let k = this.svgRoot.createSVGMatrix().translate(p.x, p.y).scale(scaleFactor).translate(-p.x, -p.y);
+		let t = this.svgContainer.getCTM().multiply(k);
 
-		return this.transform.scale;
+		// Apply new scale matrix & update properties
+		this.zoomFactor = t.a;
+		this.offset.update(t.e, t.f);
+		this._transform(t.a, 0, 0, t.d, t.e, t.f);
 	}
 
-	_listenToEvents() {
-		windowEvents.on('resize', () => this._onWindowResized);
+	selectNode(nodeId) {}
 
-		this._releaseContainerDragManager();
-		if (this._isInteractive('drag')) {
-			this.containerDrag = dragndrop(this.container);
-			this.containerDrag.onDrag((e, offset) => {
-				this.graphics.translateRel(offset.x, offset.y);
+	moveNode(nodeId, offset) {
+		let oldPos = this.nodePositions.get(nodeId);
+		let newPos = oldPos.copy().map((v, i) => v + (i ? offset.y : offset.x) / this.zoomFactor);
 
-				this._renderGraph();
-				this.emit('drag', offset);
-			});
-		}
-
-		if (this._isInteractive('scroll')) {
-			if (!this.containerDrag) {
-				this.containerDrag = dragndrop(this.container);
-			}
-			this.containerDrag.onScroll((e, scaleOffset, scrollPoint) => {
-				this._scale(scaleOffset < 0, scrollPoint);
-			});
-		}
-
-		this.graph.forEachNode((node) => this._listenNodeEvents(node));
-
-		this._releaseGraphEvents();
-		this.graph.on('changed', this._onGraphChanged);
+		this.nodePositions.set(nodeId, newPos);
+		this._render();
 	}
 
-	_stopListenToEvents() {
-		this.rendererInitialized = false;
-		this._releaseGraphEvents();
-		this._releaseContainerDragManager();
-		windowEvents.off('resize', () => this._onWindowResized);
-		this.off();
-		this.animationTimer.stop();
+	moveCamera(x, y) {}
 
-		this.graph.forEachLink((link) => {
-			if (this.renderLinks) this._removeLinkUi(link);
+	centerCamera(id) {}
+
+	_buildNodeUI(node) {
+		let nodeContainer = svg.createEl('g');
+		let rect = svg.createEl('rect', { width: this.nodeLength, height: this.nodeLength, fill: '#00a2e8' }); // TODO: Let user customize fill-color
+		let name = svg.createEl('text', { y: `${(2 * this.nodeLength) / 3}px` });
+		name.textContent = node.name;
+
+		nodeContainer.node = node;
+		nodeContainer.appendChild(rect);
+		nodeContainer.appendChild(name);
+		return nodeContainer;
+	}
+
+	_addNode(node) {
+		const nodeContainer = this._buildNodeUI(node);
+
+		nodeContainer.drag = dragndrop(nodeContainer);
+		nodeContainer.drag
+			.onStart(() => {
+				this.userInteraction = true;
+			})
+			.onDrag((e, offset) => {
+				this.userInteraction = true;
+				this.moveNode(node.id, offset);
+			})
+			.onStop(() => {
+				this.userInteraction = false;
+			});
+
+		const coord = this.newNodeLayout(node, this.view.grouping, this.nodePositions, this.maxSize);
+		this.nodePositions.set(node.id, coord);
+		this.drawnNodes.set(node.id, nodeContainer);
+		this.svgContainer.appendChild(nodeContainer);
+		this._render();
+	}
+
+	_rmNode(node) {
+		this.drawnNodes.delete(node.id);
+		this.nodePositions.delete(node.id);
+		this._render();
+	}
+
+	_renderNodes() {
+		this.drawnNodes.forEach((nodeContainer, id) => {
+			let coord = this.nodePositions.get(id);
+			svg.setAttr(nodeContainer, 'transform', `translate(${coord.x - this.nodeLength / 2}, ${coord.y - this.nodeLength / 2})`);
 		});
+	}
 
-		this.graph.forEachNode((node) => {
-			this._releaseNodeEvents(node);
-			this._removeNodeUi(node);
+	_addEdge(edge) {
+		let edgeUI = svg.createEl('path', { stroke: 'gray', 'marker-end': 'url(#Arrow)' });
+		edgeUI.edge = edge;
+		this.svgContainer.appendChild(edgeUI);
+		this.drawnEdges.set(edge.id, edgeUI);
+		this._render();
+	}
+
+	_renderEdges() {
+		this.drawnEdges.forEach((edgeUI, id) => {
+			/** @type {Edge} */
+			let edge = edgeUI.edge;
+			let sourceCoord = this.nodePositions.get(edge.source.id);
+			let targetCoord = this.nodePositions.get(edge.target.id);
+			let from = sourceCoord.rect(this.nodeLength, this.nodeLength, true).intersect(sourceCoord, targetCoord);
+			let to = targetCoord.rect(this.nodeLength, this.nodeLength, true).intersect(targetCoord, sourceCoord);
+
+			let d = `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+			svg.setAttr(edgeUI, 'd', d);
 		});
+	}
 
-		this.layout.dispose();
-		this._releaseDom();
+	// TODO: render vertical edges in potentially different ways
+
+	_render() {
+		this._renderNodes();
+		this._renderEdges();
+		return this.userInteraction;
+	}
+
+	_onResize() {
+		// TODO: Maybe add: this.updateCenter();
+		this._render();
 	}
 }
 
-function createRenderer(graph, settings) {
-	return new Renderer(graph, settings);
-}
-
-module.exports = createRenderer;
+module.exports = Renderer;

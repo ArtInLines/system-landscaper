@@ -33,6 +33,11 @@ class Tree extends EventManager {
 		return depth;
 	}
 
+	/**	Synonym for this.depth */
+	get layer() {
+		return this.depth;
+	}
+
 	/**
 	 * Returns how many levels the tree goes deeper from here
 	 * @returns {Number}
@@ -121,9 +126,13 @@ class Tree extends EventManager {
 		if (startLayer === 0 && endLayer === 0) {
 			return [this];
 		} else if (startLayer === 0) {
-			return [this, ...this.children.map((child) => child.getChildren(0, endLayer - 1))];
+			let nodes = [this];
+			this.children.forEach((child) => nodes.push(...child.getChildren(0, endLayer - 1)));
+			return nodes;
 		} else {
-			return [...this.children.map((child) => child.getChildren(startLayer - 1, endLayer - 1))];
+			let nodes = [];
+			this.children.forEach((child) => nodes.push(...child.getChildren(startLayer - 1, endLayer - 1)));
+			return nodes;
 		}
 	}
 

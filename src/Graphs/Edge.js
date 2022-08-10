@@ -1,5 +1,6 @@
 const EventManager = require('../Utils/EventManager.js');
 const nextID = require('../Utils/id.js');
+const SystemNode = require('./SystemNode.js');
 
 class Edge extends EventManager {
 	/**
@@ -9,8 +10,8 @@ class Edge extends EventManager {
 	 - `targetChanged`: When the target of this edge changes. Args: `(newTargetID, edge)`
 	 - `dataChanged`: When the data of this edge changes. Args: `(updatedData, edge)`
 	 - `update`: When any of the above events occurs. Args: `(...args of the event - this edge is always the second argument)`
-	 * @param {Number} source ID of the source node
-	 * @param {Number} target ID of the target node
+	 * @param {SystemNode} source ID of the source node
+	 * @param {SystemNode} target ID of the target node
 	 * @param {any} data Data associated with this edge. Defaults to an empty object.
 	 */
 	constructor(source, target, data = {}) {

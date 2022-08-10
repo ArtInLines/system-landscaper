@@ -1,10 +1,8 @@
-let nullEvents = require('./nullEvents.js');
-
 module.exports = createDocumentEvents();
 
 function createDocumentEvents() {
 	if (typeof document === undefined) {
-		return nullEvents;
+		return { on: () => {}, off: () => {} };
 	}
 
 	return {

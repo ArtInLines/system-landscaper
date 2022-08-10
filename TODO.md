@@ -2,12 +2,15 @@
 
 In no particular order:
 
--   Customize Layouting / Positioning specifically to support systemTrees
--   Add support for different Views to SystemLandscaper / Layout / Renderer
+-   Add Interface (or class or something?) for layout-functions
 -   Add support for loading / saving positioning (maybe as svg???)
-    -   Add support for stored starting positions for nodes / edges to renderer
--   Potentially update DOMInputHandler (specifically for view-support)
--   Further Testing
--   Add rough UI for adding Data to Nodes & Edges
+    -   Add support for stored starting positions for nodes / edges to renderer -> via layout function
+-   Add Walker's Tree-Position algorithm
+-   Add simple layout for groupings
+    -   Renderer will need to be updated too
+-   Add rough UI for updating graph & viewing/updating node/edge data
+-   Add customizability for controls (scrolling, dragging, clicking, etc.)
+-   Add Documentation
+-   Clean up code & dependencies
 
 -   Update usage of SVGs to be more accessible. See as a very short intro to the topic [here](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/SVG_In_HTML_Introduction#best_practices)

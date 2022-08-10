@@ -5,7 +5,7 @@ class EventManager {
 
 	on(event, callback) {
 		if (!this.events[event]) this.events[event] = [];
-		this.events[event].push(callback);
+		if (typeof callback === 'function') this.events[event].push(callback);
 		return this;
 	}
 
