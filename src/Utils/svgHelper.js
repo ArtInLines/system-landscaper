@@ -90,23 +90,25 @@ module.exports.getAttr = getAttr;
 
 /**
  * Create an Arrow Marker for a specified node-size. A marker should only be defined once in a <defs> child element of the root <svg> element.
- * @param {number} sideLength Length of the sides of the nodes that the arrow will point at
+ * @param {number} width
+ * @param {number} height
  * @param {string} id ID of the marker. This is used to refer to the marker again later. Defaults to `Arrow`.
  * @returns {SVGMarkerElement}
  */
-function createArrowMarker(sideLength, id = 'Arrow') {
+function createArrowMarker(width, height, id = 'Arrow') {
+	let length = (width + height) / 2;
 	let marker = createEl('marker');
 	setAttr(marker, 'id', id);
-	setAttr(marker, 'viewBox', `0 0 ${sideLength} ${sideLength}`);
-	setAttr(marker, 'refX', `${sideLength}`);
-	setAttr(marker, 'refY', `${sideLength / 2}`);
+	setAttr(marker, 'viewBox', `0 0 ${length} ${length}`);
+	setAttr(marker, 'refX', `${length}`);
+	setAttr(marker, 'refY', `${length / 2}`);
 	setAttr(marker, 'markerUnits', 'strokeWidth');
-	setAttr(marker, 'markerWidth', `${sideLength}`);
-	setAttr(marker, 'markerHeight', `${sideLength / 2}`);
+	setAttr(marker, 'markerWidth', `${length}`);
+	setAttr(marker, 'markerHeight', `${length / 2}`);
 	setAttr(marker, 'fill', '#333');
 	setAttr(marker, 'orient', 'auto');
 	let path = append(marker, 'path');
-	setAttr(path, 'd', `M 0 0 L ${sideLength} ${sideLength / 2} L 0 ${sideLength} z`);
+	setAttr(path, 'd', `M 0 0 L ${length} ${length / 2} L 0 ${length} z`);
 	return marker;
 }
 module.exports.createArrowMarker = createArrowMarker;

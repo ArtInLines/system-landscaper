@@ -96,7 +96,9 @@ class Renderer extends EventManager {
 		settings = { ...defaultSettings, ...settings };
 
 		// TODO:
-		this.nodeLength = 30; // How big should the nodes be drawn???
+		// this.nodeLength = 30; // How big should the nodes be drawn???
+		this.nodeHeight = 30;
+		this.nodeWidth = 80;
 		this.drawnNodes = new Map(); // Map<ID, SVG-Element>
 		this.drawnEdges = new Map(); // Map<ID, SVG-Element>
 		this.userInteraction = false;
@@ -141,10 +143,13 @@ class Renderer extends EventManager {
 		// Initialize SVG-Stuff
 		this._transform();
 		let defs = svg.append(this.svgRoot, 'defs'); // Create <defs> element for definitions
-		svg.append(defs, svg.createArrowMarker(this.nodeLength, 'Arrow'));
+		svg.append(defs, svg.createArrowMarker(this.nodeWidth, this.nodeHeight, 'Arrow'));
 
 		// Initialize Event-Listeners
 		window.addEventListener('resize', this._onResize.bind(this));
+		window.addEventListener('dblclick', (e) => {
+			// TODO:
+		});
 		this._setViewListeners();
 		// TODO: Let the following event-listeners be changeable by the user
 		this.dragContainer.onDrag((e, offset) => {
@@ -161,6 +166,7 @@ class Renderer extends EventManager {
 	}
 
 	_resetVisible() {
+		this.svgContainer.innerHTML = '';
 		this.drawnNodes.clear();
 		this.drawnEdges.clear();
 		this.nodePositions.clear();
@@ -204,7 +210,8 @@ class Renderer extends EventManager {
 		if (typeof layout === 'function') {
 			this.nodePositions = layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxSize);
 		}
-		this._render();
+		timer(this._render.bind(this), this.frameInterval);
+		// this._render();
 	}
 
 	/**
@@ -325,8 +332,8 @@ class Renderer extends EventManager {
 
 	_buildNodeUI(node) {
 		let nodeContainer = svg.createEl('g');
-		let rect = svg.createEl('rect', { width: this.nodeLength, height: this.nodeLength, fill: '#00a2e8' }); // TODO: Let user customize fill-color
-		let name = svg.createEl('text', { y: `${(2 * this.nodeLength) / 3}px` });
+		let rect = svg.createEl('rect', { width: this.nodeWidth, height: this.nodeHeight, fill: node?.data?.color || '#00a2e8' });
+		let name = svg.createEl('text', { y: `${(2 * this.nodeHeight) / 3}px` });
 		name.textContent = node.name;
 
 		nodeContainer.node = node;
@@ -367,7 +374,7 @@ class Renderer extends EventManager {
 	_renderNodes() {
 		this.drawnNodes.forEach((nodeContainer, id) => {
 			let coord = this.nodePositions.get(id);
-			svg.setAttr(nodeContainer, 'transform', `translate(${coord.x - this.nodeLength / 2}, ${coord.y - this.nodeLength / 2})`);
+			svg.setAttr(nodeContainer, 'transform', `translate(${coord.x - this.nodeWidth / 2}, ${coord.y - this.nodeHeight / 2})`);
 		});
 	}
 
@@ -385,8 +392,8 @@ class Renderer extends EventManager {
 			let edge = edgeUI.edge;
 			let sourceCoord = this.nodePositions.get(edge.source.id);
 			let targetCoord = this.nodePositions.get(edge.target.id);
-			let from = sourceCoord.rect(this.nodeLength, this.nodeLength, true).intersect(sourceCoord, targetCoord);
-			let to = targetCoord.rect(this.nodeLength, this.nodeLength, true).intersect(targetCoord, sourceCoord);
+			let from = sourceCoord.rect(this.nodeWidth, this.nodeHeight, true).intersect(sourceCoord, targetCoord);
+			let to = targetCoord.rect(this.nodeWidth, this.nodeHeight, true).intersect(targetCoord, sourceCoord);
 
 			let d = `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
 			svg.setAttr(edgeUI, 'd', d);

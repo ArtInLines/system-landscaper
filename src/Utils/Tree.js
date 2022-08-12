@@ -43,7 +43,9 @@ class Tree extends EventManager {
 	 * @returns {Number}
 	 */
 	get height() {
-		return Math.max(...this.children.map((child) => child.height)) + 1;
+		if (this.isLeaf()) return 0;
+		let h = Math.max(...this.children.map((child) => child.height)) + 1;
+		return h;
 	}
 
 	/**

@@ -49,19 +49,20 @@
 // };
 
 const SystemLandscape = require('./Graphs/SystemLandscape.js');
+const SystemTree = require('./Graphs/SystemTree.js');
+const SystemNode = require('./Graphs/SystemNode.js');
+const Edge = require('./Graphs/Edge.js');
 const Renderer = require('./Renderer.js');
 const View = require('./Views/View.js');
 const SingleLayerView = require('./Views/SingleLayerView.js');
-const defaultLayout = require('./Layout/randLayout.js');
+const { randLayout, randSingleLayout } = require('./Layout/randLayout.js');
 
 const Main = {
-	Graph: SystemLandscape,
-	views: {
-		View: View,
-		SingleLayerView: SingleLayerView,
-	},
+	Graph: { SystemLandscape, SystemTree, SystemNode, Edge },
+	views: { View, SingleLayerView },
 	Layouts: {
-		defaultLayout: defaultLayout,
+		randLayout,
+		randSingleLayout,
 	},
 	Renderer: Renderer,
 };

@@ -14,7 +14,7 @@ class SystemNode extends Tree {
 		this.edgesToChildren = [];
 
 		/** @type {?SystemNode} (For documentation only, remove this and use typescript type-annotations instead in the future) */
-		this.parent;
+		this.parent = null;
 		this.changeParent(parent);
 	}
 

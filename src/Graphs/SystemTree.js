@@ -24,6 +24,10 @@ class SystemTree extends EventManager {
 		if (this.root instanceof SystemNode) this.root.changeSystemTree(this);
 	}
 
+	get height() {
+		return this.root?.height ?? 0;
+	}
+
 	// Checks
 
 	isEmpty() {

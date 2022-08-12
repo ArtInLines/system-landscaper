@@ -1,8 +1,14 @@
 const View = require('./View');
+const Edge = require('../Graphs/Edge');
 
 class SingleLayerView extends View {
-	constructor(layer) {
-		super();
+	/**
+	 * This view only shows nodes that are at the same layer/depth as specified by `layer`.
+	 * @param {number} layer
+	 * @param {viewSettings} settings
+	 */
+	constructor(layer, settings = {}) {
+		super(settings);
 		this.layer = layer;
 	}
 
@@ -22,9 +28,16 @@ class SingleLayerView extends View {
 	}
 
 	_isEdgeVisible(edge) {
-		if (this._isNodeOrAncestorVisible(edge.source) && this._isNodeOrAncestorVisible(edge.target)) {
-			return true;
+		return this._isNodeVisible(edge.source) && this._isNodeVisible(edge.target);
+	}
+
+	_getFirstVisibleAncestor(node) {
+		if (this.visibleNodes.includes(node)) return node;
+		while (node?.parent) {
+			node = node.parent;
+			if (this.visibleNodes.includes(node)) return node;
 		}
+		return null;
 	}
 }
 

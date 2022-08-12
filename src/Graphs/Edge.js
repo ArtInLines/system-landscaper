@@ -53,6 +53,10 @@ class Edge extends EventManager {
 		this.data = { ...this.data, ...data };
 		this.emit('dataChanged', this.data, this);
 	}
+
+	copy() {
+		return new Edge(this.source, this.target, { ...this.data });
+	}
 }
 
 module.exports = Edge;
