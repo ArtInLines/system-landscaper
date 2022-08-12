@@ -41,7 +41,7 @@ const View = require('./Views/View');
 //		The function should return a mapping from nodeIds to new (x,y)-coordinates for them
 // - zoomIn()
 // - zoomOut()
-// - selectNode(nodeId)
+// - selectNodes(nodeId)
 // - moveNode(nodeId, x, y)
 // - moveEdge() / shapeEdge() / something like that to create curves
 // - moveCamera(x, y)
@@ -99,10 +99,12 @@ class Renderer extends EventManager {
 		// this.nodeLength = 30; // How big should the nodes be drawn???
 		this.nodeHeight = 30;
 		this.nodeWidth = 80;
+		this.arrowSize = 20;
 		this.drawnNodes = new Map(); // Map<ID, SVG-Element>
 		this.drawnEdges = new Map(); // Map<ID, SVG-Element>
 		this.userInteraction = false;
 		this.newNodeLayout = settings.newNodeLayout;
+		this.selectedNodes = [];
 
 		/** @type {SystemLandscape} System-Landscape-Graph to render */
 		this.graph = graph;
@@ -143,7 +145,7 @@ class Renderer extends EventManager {
 		// Initialize SVG-Stuff
 		this._transform();
 		let defs = svg.append(this.svgRoot, 'defs'); // Create <defs> element for definitions
-		svg.append(defs, svg.createArrowMarker(this.nodeWidth, this.nodeHeight, 'Arrow'));
+		svg.append(defs, svg.createArrowMarker(this.arrowSize, 'Arrow'));
 
 		// Initialize Event-Listeners
 		window.addEventListener('resize', this._onResize.bind(this));
@@ -316,7 +318,21 @@ class Renderer extends EventManager {
 		this._transform(t.a, 0, 0, t.d, t.e, t.f);
 	}
 
-	selectNode(nodeId) {}
+	/**
+	 * Select a Node
+	 * @param {...SystemNode|String|Number} node Node to select. Can be the node itself, its id or its name.
+	 */
+	selectNodes(...nodes) {
+		for (let nodeContainer of this.selectedNodes) nodeContainer.deselect();
+		this.selectedNodes = [];
+		for (let node of nodes) {
+			if (!(node instanceof SystemNode)) node = this.graph.getNode(node);
+			const containerNode = this.drawnNodes.get(node.id);
+			if (!containerNode) return;
+			containerNode.select();
+			this.selectedNodes.push(containerNode);
+		}
+	}
 
 	moveNode(nodeId, offset) {
 		let oldPos = this.nodePositions.get(nodeId);
@@ -336,6 +352,13 @@ class Renderer extends EventManager {
 		let name = svg.createEl('text', { y: `${(2 * this.nodeHeight) / 3}px` });
 		name.textContent = node.name;
 
+		nodeContainer.select = () => {
+			svg.setAttrs(rect, { stroke: 'black', 'stroke-width': '2' });
+		};
+		nodeContainer.deselect = () => {
+			svg.setAttrs(rect, { stroke: 'none' });
+		};
+
 		nodeContainer.node = node;
 		nodeContainer.appendChild(rect);
 		nodeContainer.appendChild(name);
@@ -345,6 +368,7 @@ class Renderer extends EventManager {
 	_addNode(node) {
 		const nodeContainer = this._buildNodeUI(node);
 
+		nodeContainer.addEventListener('click', (e) => this.selectNodes(node));
 		nodeContainer.drag = dragndrop(nodeContainer);
 		nodeContainer.drag
 			.onStart(() => {
@@ -379,7 +403,7 @@ class Renderer extends EventManager {
 	}
 
 	_addEdge(edge) {
-		let edgeUI = svg.createEl('path', { stroke: 'gray', 'marker-end': 'url(#Arrow)' });
+		let edgeUI = svg.createEl('path', { stroke: 'gray', 'stroke-width': '2', 'marker-end': 'url(#Arrow)' });
 		edgeUI.edge = edge;
 		this.svgContainer.appendChild(edgeUI);
 		this.drawnEdges.set(edge.id, edgeUI);

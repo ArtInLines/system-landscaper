@@ -17,6 +17,15 @@ class Trie {
 	}
 
 	/**
+	 * Check whether the Trie contains a Node with the name `str`
+	 * @param {String} str Name of the node
+	 * @returns {boolean}
+	 */
+	has(str) {
+		return this.find(str) !== null;
+	}
+
+	/**
 	 * Find the value associated with the name `str`
 	 * @param {String} str Name of the Node
 	 * @returns {?any} If the Node doesn't exist, `null` is returned

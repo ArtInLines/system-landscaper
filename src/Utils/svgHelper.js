@@ -95,20 +95,19 @@ module.exports.getAttr = getAttr;
  * @param {string} id ID of the marker. This is used to refer to the marker again later. Defaults to `Arrow`.
  * @returns {SVGMarkerElement}
  */
-function createArrowMarker(width, height, id = 'Arrow') {
-	let length = (width + height) / 2;
+function createArrowMarker(size, id = 'Arrow') {
 	let marker = createEl('marker');
 	setAttr(marker, 'id', id);
-	setAttr(marker, 'viewBox', `0 0 ${length} ${length}`);
-	setAttr(marker, 'refX', `${length}`);
-	setAttr(marker, 'refY', `${length / 2}`);
+	setAttr(marker, 'viewBox', `0 0 ${size} ${size}`);
+	setAttr(marker, 'refX', `${size}`);
+	setAttr(marker, 'refY', `${size / 2}`);
 	setAttr(marker, 'markerUnits', 'strokeWidth');
-	setAttr(marker, 'markerWidth', `${length}`);
-	setAttr(marker, 'markerHeight', `${length / 2}`);
+	setAttr(marker, 'markerWidth', `${size}`);
+	setAttr(marker, 'markerHeight', `${size / 2}`);
 	setAttr(marker, 'fill', '#333');
 	setAttr(marker, 'orient', 'auto');
 	let path = append(marker, 'path');
-	setAttr(path, 'd', `M 0 0 L ${length} ${length / 2} L 0 ${length} z`);
+	setAttr(path, 'd', `M 0 0 L ${size} ${size / 2} L 0 ${size} z`);
 	return marker;
 }
 module.exports.createArrowMarker = createArrowMarker;

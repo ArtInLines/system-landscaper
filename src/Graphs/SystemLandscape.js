@@ -289,6 +289,11 @@ class SystemLandscape extends EventManager {
 	addSystem(name = null, data = {}, parent = null) {
 		if (name === null) name = String(system.id);
 		if (typeof parent === 'string') parent = this.getSystemByName(parent);
+
+		let i = '';
+		while (this.systemsByName.has(name + i)) i++;
+		name += i;
+
 		let system = new SystemNode(name, parent, data);
 		this.systemsByName.insert(name, system);
 		this.systemsByID.set(system.id, system);
