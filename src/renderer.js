@@ -107,6 +107,7 @@ class Renderer extends EventManager {
 		this.userInteraction = false;
 		this.Layout = settings.Layout;
 		this.selectedNodes = [];
+		this.selectedEdges = [];
 		this.just_selected = false;
 
 		/** @type {SystemLandscape} System-Landscape-Graph to render */
@@ -155,9 +156,6 @@ class Renderer extends EventManager {
 		// Initialize Event-Listeners
 		window.addEventListener('resize', this._onResize.bind(this));
 		window.addEventListener('keydown', this._onKeyDown.bind(this));
-		window.addEventListener('dblclick', (e) => {
-			// TODO:
-		});
 		this._setViewListeners();
 		// TODO: Let the following event-listeners be changeable by the user
 		this.dragContainer.onDrag((e, offset) => {
@@ -169,8 +167,8 @@ class Renderer extends EventManager {
 		});
 		this.container.addEventListener('click', () => {
 			if (!this.just_selected) {
-				this.selectedNodes.forEach((nodeContainer) => nodeContainer.deselect());
-				this.selectedNodes = [];
+				this.deselectEdges();
+				this.deselectNodes();
 			}
 			this.just_selected = false;
 		});
@@ -348,17 +346,37 @@ class Renderer extends EventManager {
 	 * @param {...SystemNode|String|Number} node Node to select. Can be the node itself, its id or its name.
 	 */
 	selectNodes(...nodes) {
-		for (let nodeContainer of this.selectedNodes) nodeContainer.deselect();
-		this.selectedNodes = [];
+		this.deselectNodes();
 		for (let node of nodes) {
 			if (!(node instanceof SystemNode)) node = this.graph.getNode(node);
-			const containerNode = this.drawnNodes.get(node.id);
-			if (!containerNode) return;
-			containerNode.select();
-			this.selectedNodes.push(containerNode);
+			this.drawnNodes.get(node.id)?.select();
+			this.selectedNodes.push(node);
 		}
 		this.just_selected = true;
-		this.emit('selected', this.selectedNodes);
+		this.emit('selected-nodes', this.selectedNodes);
+	}
+
+	deselectNodes() {
+		for (let node of this.selectedNodes) this.drawnNodes.get(node.id).deselect();
+		this.selectedNodes = [];
+		this.emit('deselected-nodes');
+	}
+
+	selectEdges(...edges) {
+		this.deselectEdges();
+		for (let edge of edges) {
+			if (!(edge instanceof Edge)) edge = this.graph.getEdge(edge);
+			this.drawnEdges.get(edge.id)?.select();
+			this.selectedEdges.push(edge);
+		}
+		this.just_selected = true;
+		this.emit('selected-edges', this.selectedEdges);
+	}
+
+	deselectEdges() {
+		for (let edge of this.selectedEdges) this.drawnEdges.get(edge.id).deselect();
+		this.selectedEdges = [];
+		this.emit('deselected-edges');
 	}
 
 	moveNode(nodeId, offset) {
@@ -390,9 +408,8 @@ class Renderer extends EventManager {
 		let from = nodePos.rect(this.nodeWidth, this.nodeHeight, true).intersect(nodePos, point);
 
 		if (from === null) return line;
-		let d = `M ${from.x} ${from.y} L ${point.x} ${point.y}`;
+		line.setPath(from.x, from.y, point.x, point.y);
 		line.to = point;
-		svg.setAttr(line, 'd', d);
 		return line;
 	}
 
@@ -422,7 +439,7 @@ class Renderer extends EventManager {
 	_addNode(node) {
 		const nodeContainer = this._buildNodeUI(node);
 
-		nodeContainer.addEventListener('click', (e) => this.selectNodes(node));
+		nodeContainer.addEventListener('dblclick', (e) => this.selectNodes(node));
 		nodeContainer.drag = dragndrop(nodeContainer);
 		nodeContainer.drag
 			.onStart(() => {
@@ -487,12 +504,31 @@ class Renderer extends EventManager {
 	}
 
 	_buildEdgeUI() {
-		return svg.createEl('path', { stroke: 'gray', 'stroke-width': '2', 'marker-end': 'url(#Arrow)' });
+		let container = svg.createEl('g');
+		let arrow = svg.createEl('path', { stroke: 'gray', 'stroke-width': '2', 'marker-end': 'url(#Arrow)' });
+
+		container.selected = false;
+		container.select = () => {
+			svg.setAttrs(arrow, { stroke: 'blue', 'stroke-width': '3' });
+			container.selected = true;
+		};
+		container.deselect = () => {
+			svg.setAttrs(arrow, { stroke: 'gray', 'stroke-width': '2' });
+			container.selected = false;
+		};
+		container.setPath = (x1, y1, x2, y2) => {
+			svg.setAttr(arrow, 'd', `M ${x1} ${y1} L ${x2} ${y2}`);
+		};
+		container.appendChild(arrow);
+		return container;
 	}
 
 	_addEdge(edge) {
 		let edgeUI = this._buildEdgeUI();
 		edgeUI.edge = edge;
+		edgeUI.addEventListener('dblclick', (e) => {
+			this.selectEdges(edge);
+		});
 		this.svgContainer.appendChild(edgeUI);
 		this.drawnEdges.set(edge.id, edgeUI);
 		this._render();
@@ -507,8 +543,7 @@ class Renderer extends EventManager {
 			let from = sourceCoord.rect(this.nodeWidth, this.nodeHeight, true).intersect(sourceCoord, targetCoord);
 			let to = targetCoord.rect(this.nodeWidth, this.nodeHeight, true).intersect(targetCoord, sourceCoord);
 
-			let d = `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
-			svg.setAttr(edgeUI, 'd', d);
+			edgeUI.setPath(from.x, from.y, to.x, to.y);
 		});
 	}
 

@@ -271,3 +271,6 @@ function changeView() {
 }
 
 renderer.run();
+
+renderer.on('selected-nodes', (nodes) => console.log({ nodes }));
+renderer.on('selected-edges', (edges) => console.log({ edges }));
