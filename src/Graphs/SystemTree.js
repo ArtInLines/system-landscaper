@@ -91,7 +91,8 @@ class SystemTree extends EventManager {
 	removeSystem(systemId) {
 		let system = this.getSystem(systemId);
 		if (!system) return false;
-		system.parent.removeChild(system.id);
+		system.remove(system.id);
+
 		return true;
 	}
 }

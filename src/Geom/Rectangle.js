@@ -77,6 +77,10 @@ class Rectangle {
 			intersect(this.right, this.top, this.left, this.top, p1.x, p1.y, p2.x, p2.y)
 		);
 	}
+
+	isPointInside(p, radius = 1) {
+		return this.left <= p.x + radius && this.right >= p.x - radius && this.top <= p.y + radius && this.bottom >= p.y - radius;
+	}
 }
 
 module.exports = Rectangle;

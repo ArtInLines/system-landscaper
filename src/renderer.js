@@ -23,6 +23,8 @@ const SystemTree = require('./Graphs/SystemTree');
 const SystemNode = require('./Graphs/SystemNode');
 const Edge = require('./Graphs/Edge');
 const View = require('./Views/View');
+const Rectangle = require('./Geom/Rectangle');
+const Layout = require('./Layout/Layout');
 
 // Wanted API:
 // - run(layout?)
@@ -74,7 +76,7 @@ const View = require('./Views/View');
  * @property {HTMLElement} container Container elemnent, in which the svg-container is added.
  * @property {?Coordinate} maxSize Maximum rectangle size. Defaults to the whole size of `container`.
  * @property {View} view View to use for rendering.
- * @property {layout} newNodeLayout Function to use for finding the position of a single new node.
+ * @property {Layout} Layout Function to use for finding the position of a single new node.
  */
 
 /** @type {rendererSettings} */
@@ -83,7 +85,7 @@ const defaultSettings = {
 	container: document.body,
 	maxSize: null,
 	view: new SingleLayerView(0),
-	newNodeLayout: randSingleLayout,
+	Layout: new Layout(),
 };
 
 class Renderer extends EventManager {
@@ -103,8 +105,9 @@ class Renderer extends EventManager {
 		this.drawnNodes = new Map(); // Map<ID, SVG-Element>
 		this.drawnEdges = new Map(); // Map<ID, SVG-Element>
 		this.userInteraction = false;
-		this.newNodeLayout = settings.newNodeLayout;
+		this.Layout = settings.Layout;
 		this.selectedNodes = [];
+		this.just_selected = false;
 
 		/** @type {SystemLandscape} System-Landscape-Graph to render */
 		this.graph = graph;
@@ -129,6 +132,8 @@ class Renderer extends EventManager {
 
 		/** @type {Coordinate} Maximum Size for the svg-container to take up */
 		this.maxSize = this._setMaxSizeHelper(settings.maxSize);
+		/** @type {Rectangle} Rectangle defining the confines of the svg-container */
+		this.maxRect = new Rectangle(0, 0, this.maxSize.x, this.maxSize.y);
 		/** @type {number} How many ms to wait between rendering frames */
 		this.frameInterval = settings.frameInterval;
 
@@ -149,6 +154,7 @@ class Renderer extends EventManager {
 
 		// Initialize Event-Listeners
 		window.addEventListener('resize', this._onResize.bind(this));
+		window.addEventListener('keydown', this._onKeyDown.bind(this));
 		window.addEventListener('dblclick', (e) => {
 			// TODO:
 		});
@@ -160,6 +166,13 @@ class Renderer extends EventManager {
 		});
 		this.dragContainer.onScroll((e, scaleOffset, scrollPoint) => {
 			this._scale(scaleOffset < 0, scrollPoint);
+		});
+		this.container.addEventListener('click', () => {
+			if (!this.just_selected) {
+				this.selectedNodes.forEach((nodeContainer) => nodeContainer.deselect());
+				this.selectedNodes = [];
+			}
+			this.just_selected = false;
 		});
 
 		// TODO: Listen to changes in the graph and update accordingly
@@ -179,7 +192,9 @@ class Renderer extends EventManager {
 		});
 		let edges = this.view.getVisibleEdges();
 		edges.forEach((edge) => {
-			if (this.drawnNodes.has(edge.source.id) && this.drawnNodes.has(edge.target.id)) this._addEdge(edge);
+			if (this.drawnNodes.has(edge.source.id) && this.drawnNodes.has(edge.target.id)) {
+				this._addEdge(edge);
+			}
 			// TODO
 		});
 	}
@@ -196,6 +211,17 @@ class Renderer extends EventManager {
 		return new Coordinate(x, y);
 	}
 
+	_onKeyDown(e) {
+		// If backspace is pressed, delete all selected nodes
+		if (e.key === 'Backspace') {
+			for (let nodeContainer of this.selectedNodes) {
+				let node = nodeContainer.node;
+				this.graph.removeSystem(node.id);
+			}
+			this.selectedNodes = [];
+		}
+	}
+
 	/**
 	 * Get a list of all systemNodes, that are visible in the current view
 	 * @returns {Array<SystemNode>}
@@ -204,14 +230,11 @@ class Renderer extends EventManager {
 		return this.view.getVisibleNodes();
 	}
 
-	// layout(nodes::Array/Set<SystemNode>, grouping::NodeGroup, currentNodePositions::Map<ID, (x,y)-Coordinate>, maxSize)
-	//		Returns Map<ID, (x,y)-Coordinate>
-	run(layout = randLayout) {
+	run() {
 		if (!this.isInitialized) this._init();
 
-		if (typeof layout === 'function') {
-			this.nodePositions = layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxSize);
-		}
+		this.nodePositions = this.Layout.layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxRect, this.nodeWidth, this.nodeHeight);
+
 		timer(this._render.bind(this), this.frameInterval);
 		// this._render();
 	}
@@ -221,11 +244,13 @@ class Renderer extends EventManager {
 	 * @param {View} View New View
 	 */
 	changeView(View) {
+		this._rmViewListeners();
 		this.view = View.init(this.graph);
 		this._resetVisible();
-		this._rmViewListeners();
 		this._setViewListeners();
-		// TODO: ???
+		// TODO:
+		// Calculate new Positions
+		// Render new Graph
 	}
 
 	_setViewListeners() {
@@ -251,8 +276,8 @@ class Renderer extends EventManager {
 		this.view.off(null);
 	}
 
-	runLayout(layout) {
-		this.nodePositions = layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxSize);
+	runLayout(Layout) {
+		this.nodePositions = Layout.layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxRect, this.nodeWidth, this.nodeHeight);
 		this._render();
 	}
 
@@ -332,6 +357,8 @@ class Renderer extends EventManager {
 			containerNode.select();
 			this.selectedNodes.push(containerNode);
 		}
+		this.just_selected = true;
+		this.emit('selected', this.selectedNodes);
 	}
 
 	moveNode(nodeId, offset) {
@@ -346,6 +373,29 @@ class Renderer extends EventManager {
 
 	centerCamera(id) {}
 
+	_buildLine(nodeId, point) {
+		let line = this._buildEdgeUI();
+		line.nodeId = nodeId;
+		this.svgContainer.appendChild(line);
+		return this._moveLineTo(line, point);
+	}
+
+	_moveLineBy(line, offset) {
+		let point = new Coordinate(line.to.x + offset.x, line.to.y + offset.y);
+		return this._moveLineTo(line, point);
+	}
+
+	_moveLineTo(line, point) {
+		let nodePos = this.nodePositions.get(line.nodeId);
+		let from = nodePos.rect(this.nodeWidth, this.nodeHeight, true).intersect(nodePos, point);
+
+		if (from === null) return line;
+		let d = `M ${from.x} ${from.y} L ${point.x} ${point.y}`;
+		line.to = point;
+		svg.setAttr(line, 'd', d);
+		return line;
+	}
+
 	_buildNodeUI(node) {
 		let nodeContainer = svg.createEl('g');
 		let rect = svg.createEl('rect', { width: this.nodeWidth, height: this.nodeHeight, fill: node?.data?.color || '#00a2e8' });
@@ -354,11 +404,15 @@ class Renderer extends EventManager {
 
 		nodeContainer.select = () => {
 			svg.setAttrs(rect, { stroke: 'black', 'stroke-width': '2' });
+			nodeContainer.selected = true;
 		};
 		nodeContainer.deselect = () => {
 			svg.setAttrs(rect, { stroke: 'none' });
+			nodeContainer.selected = false;
 		};
 
+		nodeContainer.selected = false;
+		nodeContainer.drawnLine = null;
 		nodeContainer.node = node;
 		nodeContainer.appendChild(rect);
 		nodeContainer.appendChild(name);
@@ -376,13 +430,42 @@ class Renderer extends EventManager {
 			})
 			.onDrag((e, offset) => {
 				this.userInteraction = true;
-				this.moveNode(node.id, offset);
+				if (!nodeContainer.selected) {
+					this.moveNode(node.id, offset);
+					return;
+				}
+
+				if (!nodeContainer.drawnLine) nodeContainer.drawnLine = this._buildLine(node.id, e);
+				else {
+					this._moveLineTo(nodeContainer.drawnLine, e);
+				}
 			})
 			.onStop(() => {
+				const insideRectRadius = 10;
+				if (nodeContainer.drawnLine) {
+					let p = nodeContainer.drawnLine.to;
+					if (!(p instanceof Coordinate)) p = new Coordinate(p.x, p.y);
+					for (let id of this.nodePositions.keys()) {
+						if (id !== node.id) {
+							let nodePos = this.nodePositions.get(id);
+							let t = nodePos.rect(this.nodeWidth, this.nodeHeight, true).isPointInside(p, insideRectRadius);
+							if (t) {
+								let source = this.graph.getSystem(node.id);
+								let target = this.graph.getSystem(id);
+								let edge = new Edge(source, target);
+								this.graph.addEdge(edge);
+								break;
+							}
+						}
+					}
+					nodeContainer.drawnLine.remove();
+					nodeContainer.drawnLine = null;
+				}
+
 				this.userInteraction = false;
 			});
 
-		const coord = this.newNodeLayout(node, this.view.grouping, this.nodePositions, this.maxSize);
+		const coord = this.Layout.layout([node], this.view.grouping, this.nodePositions, this.maxRect, this.nodeWidth, this.nodeHeight).get(node.id);
 		this.nodePositions.set(node.id, coord);
 		this.drawnNodes.set(node.id, nodeContainer);
 		this.svgContainer.appendChild(nodeContainer);
@@ -390,6 +473,7 @@ class Renderer extends EventManager {
 	}
 
 	_rmNode(node) {
+		this.drawnNodes.get(node.id)?.remove();
 		this.drawnNodes.delete(node.id);
 		this.nodePositions.delete(node.id);
 		this._render();
@@ -402,8 +486,12 @@ class Renderer extends EventManager {
 		});
 	}
 
+	_buildEdgeUI() {
+		return svg.createEl('path', { stroke: 'gray', 'stroke-width': '2', 'marker-end': 'url(#Arrow)' });
+	}
+
 	_addEdge(edge) {
-		let edgeUI = svg.createEl('path', { stroke: 'gray', 'stroke-width': '2', 'marker-end': 'url(#Arrow)' });
+		let edgeUI = this._buildEdgeUI();
 		edgeUI.edge = edge;
 		this.svgContainer.appendChild(edgeUI);
 		this.drawnEdges.set(edge.id, edgeUI);

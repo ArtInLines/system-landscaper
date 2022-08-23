@@ -30,15 +30,6 @@ class SingleLayerView extends View {
 	_isEdgeVisible(edge) {
 		return this._isNodeVisible(edge.source) && this._isNodeVisible(edge.target);
 	}
-
-	_getFirstVisibleAncestor(node) {
-		if (this.visibleNodes.includes(node)) return node;
-		while (node?.parent) {
-			node = node.parent;
-			if (this.visibleNodes.includes(node)) return node;
-		}
-		return null;
-	}
 }
 
 module.exports = SingleLayerView;

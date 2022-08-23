@@ -110,7 +110,7 @@ class View extends EventManager {
 		let idx = this.visibleNodes.indexOf(node);
 		if (idx !== -1) {
 			this.visibleNodes.splice(idx, 1);
-			this.groups.removeNode(node);
+			this.grouping.removeNode(node);
 			this.emit('node-remove', node);
 		}
 	}
@@ -212,6 +212,20 @@ class View extends EventManager {
 	 */
 	_isEdgeVisible(edge) {
 		return true;
+	}
+
+	/**
+	 * Goes up the system tree until a node is visible. That node is returned. If no parent-node is visible, then null is returned.
+	 * @param {SystemNode} node
+	 * @returns {?SystemNode}
+	 */
+	_getFirstVisibleAncestor(node) {
+		if (this.visibleNodes.includes(node)) return node;
+		while (node?.parent) {
+			node = node.parent;
+			if (this.visibleNodes.includes(node)) return node;
+		}
+		return null;
 	}
 
 	/**

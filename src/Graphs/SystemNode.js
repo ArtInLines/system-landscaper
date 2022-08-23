@@ -55,11 +55,18 @@ class SystemNode extends Tree {
 	removeChild(id) {
 		let c = super.removeChild(id);
 		if (c) {
+			if (c.systemTree) c.systemTree = null;
 			let idx = this.edgesToChildren.findIndex((edge) => edge.target !== id);
 			this.emit('edgeRemoved', this.edgesToChildren[idx], this, c);
 			this.edgesToChildren.splice(idx, 1);
 		}
 		return c;
+	}
+
+	remove() {
+		super.remove();
+		this.systemTree = null;
+		return this;
 	}
 }
 

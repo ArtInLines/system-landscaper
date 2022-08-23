@@ -311,6 +311,10 @@ class SystemLandscape extends EventManager {
 	}
 
 	_addEdge(edge) {
+		// Check if an edge connecting the two systems already exists
+		let e = this.edges.find((e) => e.source === edge.source && e.target === edge.target);
+		if (e) return e;
+
 		this.edges.push(edge);
 		// this.emit('edgeAdded', edge, this.isVerticalEdge(edge));
 		this.addChange('add', edge);
@@ -367,15 +371,35 @@ class SystemLandscape extends EventManager {
 
 	// Removing Data
 
-	removeSystem(id) {
-		let sysEdges = this.getEdgesOfSystem(id, true, true, true);
-		let sys = this.getSystem(id);
-		this.systemsByID.delete(id);
-		this.systemsByName.delete(sys.name);
-		// this.emit('systemRemoved', sys);
-		this.addChange('remove', sys);
-		sysEdges.forEach((edge) => this._removeEdge(edge));
+	_removeSystemTree(id) {
+		let idx = this.systemTrees.findIndex((st) => st.id === id);
+		if (idx < 0) return;
+		let sysTree = this.systemTrees[idx];
+
+		this._removeSystem(sysTree.root);
+		this.systemTrees.splice(idx, 1);
+
 		this.emitChanges();
+		return sysTree;
+	}
+
+	removeSystem(id) {
+		let res = null;
+		let sys = this.getSystem(id);
+		if (sys.systemTree.root === sys) res = this._removeSystemTree(sys.systemTree.id);
+		else res = this._removeSystem(sys);
+		this.emitChanges();
+		return res;
+	}
+
+	_removeSystem(sys) {
+		sys.systemTree.removeSystem(sys.id);
+		this.systemsByID.delete(sys.id);
+		this.systemsByName.delete(sys.name);
+		this.addChange('remove', sys);
+		let sysEdges = this.getEdgesOfSystem(sys.id, true, true, true);
+		sysEdges.forEach((edge) => this._removeEdge(edge));
+		return sys;
 	}
 
 	_removeEdge(id, keepBidirectional = true) {

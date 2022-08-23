@@ -200,9 +200,24 @@ class Tree extends EventManager {
 			return null;
 		} else {
 			let removedChild = this.children.splice(idx, 1)[0];
+			removedChild.parent = null;
 			this.emit('childRemoved', removedChild, this);
 			return removedChild;
 		}
+	}
+
+	removeAllChildren() {
+		for (let child of this.children) {
+			child.removeAllChildren();
+			this.removeChild(child.id);
+		}
+		return this;
+	}
+
+	remove() {
+		this.removeAllChildren();
+		this.parent?.removeChild(this.id);
+		return this;
 	}
 }
 

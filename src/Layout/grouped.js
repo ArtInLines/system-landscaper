@@ -12,3 +12,18 @@ const Coordinate = require('../Geom/Coordinate.js');
 function groupedLayout(nodes, grouping, currentNodePositions, maxSize) {
 	let nodePositions = new Map();
 }
+
+/**
+ * @param {NodeGroup} group Group of nodes to layout
+ */
+function recGroupPositions(group) {
+	let nodePositions = new Map();
+	if (group.groups.length === 0) {
+		let n = Math.ceil(Math.sqrt(group.nodes.length));
+		for (let i = 0; i < n; i++) {
+			for (let j = 0; j < n - 1; j++) {
+				nodePositions.set(group.nodes[i * n + j], new Coordinate(i, j));
+			}
+		}
+	}
+}
