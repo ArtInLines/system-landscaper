@@ -3,10 +3,9 @@ const newNodeBtn = document.getElementById('btn-new');
 const viewSelect = document.getElementById('select-view');
 const sideBar = document.getElementById('sidebar');
 
-const SystemLandscape = SystemMapper.Graph.SystemLandscape;
-const Node = SystemMapper.Graph.SystemNode;
+const { SystemLandscape, SystemNode: Node } = SystemMapper.Graph;
 const Renderer = SystemMapper.Renderer;
-const SingleLayerView = SystemMapper.views.SingleLayerView;
+const { View, SingleLayerView, SingleLayerTreeMapView } = SystemMapper.Views;
 
 const sl = new SystemLandscape();
 
@@ -40,18 +39,18 @@ newNodeBtn.addEventListener('click', (e) => addNewNode(e));
 viewSelect.addEventListener('click', (e) => updateViewOptions(e));
 viewSelect.addEventListener('change', (e) => changeView(e));
 
-function getDefaultNodeData() {
+function getDefaultNodeData(node = null) {
 	return {
-		name: '',
-		parent: null,
-		wikiLink: '',
-		description: '',
-		type: '',
-		color: '',
+		name: node?.name || '',
+		parent: node?.parent?.name || null,
+		wikiLink: node?.data?.wikiLink || '',
+		description: node?.data?.description || '',
+		type: node?.data?.type || '',
+		color: node?.data?.color || '',
 	};
 }
 
-function getInputField(label = 'Label', placeholder = 'Placeholder', onChange = () => {}) {
+function getInputField(label = 'Label', value = null, placeholder = 'Placeholder', onChange = () => {}) {
 	const container = document.createElement('div');
 	container.className = 'input-container';
 	const labelEl = document.createElement('label');
@@ -59,7 +58,8 @@ function getInputField(label = 'Label', placeholder = 'Placeholder', onChange = 
 	labelEl.className = 'input-label';
 	const input = document.createElement('input');
 	input.type = 'text';
-	input.placeholder = placeholder;
+	if (value) input.value = value;
+	else input.placeholder = placeholder;
 	input.className = 'input-field';
 	input.addEventListener('change', (e) => onChange(input.value));
 
@@ -68,7 +68,7 @@ function getInputField(label = 'Label', placeholder = 'Placeholder', onChange = 
 	return container;
 }
 
-function getSelectField(label, values, onChange) {
+function getSelectField(label, values, isSelected, onChange) {
 	const container = document.createElement('div');
 	container.className = 'select-container';
 	const labelEl = document.createElement('label');
@@ -88,6 +88,7 @@ function getSelectField(label, values, onChange) {
 		const option = document.createElement('option');
 		option.value = value;
 		option.textContent = text;
+		if (typeof isSelected === 'function' && isSelected(option)) option.selected = true;
 		select.appendChild(option);
 	});
 	select.addEventListener('change', (e) => onChange(select.value));
@@ -96,7 +97,7 @@ function getSelectField(label, values, onChange) {
 	return container;
 }
 
-function getDataListField(label, values, onChange) {
+function getDataListField(label, val = null, values, onChange) {
 	let idCounter = getDataListField?.idCounter || 0;
 	const dataListId = `${idCounter}-data-list`;
 	idCounter++;
@@ -109,6 +110,7 @@ function getDataListField(label, values, onChange) {
 	labelEl.className = 'data-list-label';
 	const inputEl = document.createElement('input');
 	inputEl.type = 'text';
+	if (val) inputEl.value = val;
 	inputEl.setAttribute('list', dataListId);
 	inputEl.className = 'data-list-input';
 	const dataList = document.createElement('datalist');
@@ -142,35 +144,35 @@ function getDataListField(label, values, onChange) {
 	return container;
 }
 
-function getNewNodeEditorHTML() {
-	const data = getDefaultNodeData();
-	const newNodeEditor = document.createElement('div');
-	newNodeEditor.className = 'new-node-editor';
+function getNodeEditorHTML(submit = null, node = null) {
+	const data = getDefaultNodeData(node);
+	const nodeEditor = document.createElement('div');
+	nodeEditor.className = 'node-editor';
 
-	const nameField = getInputField('Name', 'Name des Systems', (name) => {
+	const nameField = getInputField('Name', data.name || null, 'Name des Systems', (name) => {
 		data.name = name;
 	});
 	nameField.classList.add('sub-container');
-	newNodeEditor.appendChild(nameField);
+	nodeEditor.appendChild(nameField);
 
 	let parentValues = sl.getSystems(0, Infinity, true).map((n) => [n.name, n.name]);
-	const parentField = getDataListField('"Vater"-System', parentValues, (parent) => {
+	const parentField = getDataListField('"Vater"-System', data?.parent || null, parentValues, (parent) => {
 		data.parent = parent;
 	});
 	parentField.classList.add('sub-container');
-	newNodeEditor.appendChild(parentField);
+	nodeEditor.appendChild(parentField);
 
-	const wikiLinkField = getInputField('Wiki Link', 'Link zur Wiki-Seite des Systems', (wikiLink) => {
+	const wikiLinkField = getInputField('Wiki Link', data?.wikiLink || null, 'Link zur Wiki-Seite des Systems', (wikiLink) => {
 		data.wikiLink = wikiLink;
 	});
 	wikiLinkField.classList.add('sub-container');
-	newNodeEditor.appendChild(wikiLinkField);
+	nodeEditor.appendChild(wikiLinkField);
 
-	const descriptionField = getInputField('Beschreibung', 'Beschreibung des Systems', (description) => {
+	const descriptionField = getInputField('Beschreibung', data?.description || null, 'Beschreibung des Systems', (description) => {
 		data.description = description;
 	});
 	descriptionField.classList.add('sub-container');
-	newNodeEditor.appendChild(descriptionField);
+	nodeEditor.appendChild(descriptionField);
 
 	const typeField = getSelectField(
 		'Typ',
@@ -181,12 +183,13 @@ function getNewNodeEditorHTML() {
 			['Software System', 'software'],
 			['Datenbank', 'db'],
 		],
+		(opt) => opt.value === data.type,
 		(type) => {
 			data.type = type;
 		}
 	);
 	typeField.classList.add('sub-container');
-	newNodeEditor.appendChild(typeField);
+	nodeEditor.appendChild(typeField);
 
 	const colorField = getSelectField(
 		'Farbe',
@@ -200,12 +203,13 @@ function getNewNodeEditorHTML() {
 			['Weiß', 'white'],
 			['Schwarz', 'black'],
 		],
+		(opt) => opt.value === data.color,
 		(color) => {
 			data.color = color;
 		}
 	);
 	colorField.classList.add('sub-container');
-	newNodeEditor.appendChild(colorField);
+	nodeEditor.appendChild(colorField);
 
 	const btnContainer = document.createElement('div');
 	btnContainer.classList.add('sub-container', 'btn-container');
@@ -215,27 +219,32 @@ function getNewNodeEditorHTML() {
 	cancelBtn.addEventListener('click', (e) => clearSideBar());
 
 	const submitBtn = document.createElement('button');
-	submitBtn.textContent = 'Hinzufügen';
+	submitBtn.textContent = 'Bestätigen';
 	submitBtn.className = 'btn-submit';
-	submitBtn.addEventListener('click', (e) => submitNewNode(data));
+	submitBtn.addEventListener('click', (e) => submit(data, node));
 
 	btnContainer.appendChild(cancelBtn);
 	btnContainer.appendChild(submitBtn);
-	newNodeEditor.appendChild(btnContainer);
+	nodeEditor.appendChild(btnContainer);
 
-	return newNodeEditor;
+	return nodeEditor;
 }
 
 function addNewNode() {
 	clearSideBar();
-	sideBar.appendChild(getNewNodeEditorHTML());
+	sideBar.appendChild(getNodeEditorHTML(submitNewNode, null));
+}
+
+function updateNodeHTML(node) {
+	clearSideBar();
+	sideBar.appendChild(getNodeEditorHTML(updateNode, node));
 }
 
 function clearSideBar(data) {
 	sideBar.childNodes.forEach((c) => c.remove());
 }
 
-function submitNewNode(data) {
+function submitNewNode(data, node) {
 	let name = data.name || null;
 	delete data.name;
 	let parent = data.parent || null;
@@ -244,33 +253,64 @@ function submitNewNode(data) {
 	clearSideBar();
 }
 
+function updateNode(data, node) {
+	sl.updateSystem(node.id, data);
+	clearSideBar();
+}
+
 const views = {};
+
+function addOption(selectEl, text, value, isSelected) {
+	const opt = document.createElement('option');
+	opt.text = text;
+	opt.value = value;
+	if (isSelected(opt)) opt.selected = true;
+	selectEl.appendChild(opt);
+	return opt;
+}
 
 function updateViewOptions() {
 	let selectedOptIds = Array.from(viewSelect.selectedOptions).map((o) => o.value);
+	const isSelected = (opt) => selectedOptIds.includes(opt.value);
 	viewSelect.innerHTML = '';
+
 	const maxHeight = sl.getMaxHeight();
 	let i = 0;
 	do {
-		const opt = document.createElement('option');
-		opt.value = `single-layer-${i}`;
-		opt.text = `Layer ${i}`;
+		let opt = addOption(viewSelect, `Layer ${i}`, `single-layer-${i}`, isSelected);
 		views[opt.value] = new SingleLayerView(i);
-		if (selectedOptIds.includes(opt.value)) opt.selected = true;
-		viewSelect.appendChild(opt);
 		i++;
 	} while (i <= maxHeight);
+
+	i = 0;
+	do {
+		let opt = addOption(viewSelect, `TreeMap Layer ${i}`, `treemap-layer-${i}`, isSelected);
+		views[opt.value] = new SingleLayerTreeMapView(i);
+		i++;
+	} while (i <= maxHeight);
+
+	let opt = addOption(viewSelect, `Total View`, `total-view`, isSelected);
+	views[opt.value] = new View();
 }
 
 updateViewOptions();
 const renderer = new Renderer(sl, { view: views[viewSelect.value], container: graphContainer });
 
+const currentViewValue = viewSelect.value;
 function changeView() {
+	if (currentViewValue === viewSelect.value) return;
+
 	const view = views[viewSelect.value];
 	renderer.changeView(view);
 }
 
 renderer.run();
 
-renderer.on('selected-nodes', (nodes) => console.log({ nodes }));
-renderer.on('selected-edges', (edges) => console.log({ edges }));
+renderer.on('selected-nodes', (nodes) => {
+	let n = nodes[0];
+	updateNodeHTML(n);
+});
+renderer.on('deselected-nodes', () => {
+	clearSideBar();
+});
+renderer.on('selected-edges', (edges) => {});

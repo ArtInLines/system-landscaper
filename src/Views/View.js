@@ -184,7 +184,7 @@ class View extends EventManager {
 	 * @returns {SystemNode[]}
 	 */
 	getVisibleNodes(cached = true) {
-		if (!cached) this.visibleNodes = this.graph.getNodes().filter(this._isNodeVisible.bind(this));
+		if (!cached) this.visibleNodes = this.graph.getSystems(0, Infinity, true).filter(this._isNodeVisible.bind(this));
 		return this.visibleNodes;
 	}
 

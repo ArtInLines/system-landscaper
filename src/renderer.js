@@ -256,7 +256,9 @@ class Renderer extends EventManager {
 			.on('node-add', (node) => {
 				this._addNode(node);
 			})
-			.on('node-update')
+			.on('node-update', (node) => {
+				this._updateNode(node);
+			})
 			.on('node-remove', (node) => {
 				this._rmNode(node);
 			})
@@ -494,6 +496,11 @@ class Renderer extends EventManager {
 		this.drawnNodes.delete(node.id);
 		this.nodePositions.delete(node.id);
 		this._render();
+	}
+
+	_updateNode(node) {
+		this.drawnNodes.get(node.id)?.remove();
+		this._addNode(node);
 	}
 
 	_renderNodes() {
