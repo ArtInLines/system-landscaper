@@ -144,10 +144,10 @@ However, the idea is to provide a single distributed file for the entire library
 Run the following script:
 
 ```
-git clone https://github.com/anvaka/VivaGraphJS.git
-cd ./VivaGraphJS
+git clone https://github.com/artinlines/system-landscaper
+cd ./system-landscaper
 npm install
-npx gulp release
+npm run build
 ```
 
 The combined/minified code should be stored in `dist` folder.
