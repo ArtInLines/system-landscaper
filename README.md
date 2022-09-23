@@ -151,3 +151,5 @@ npm run build
 ```
 
 The combined/minified code should be stored in `dist` folder.
+
+To run the website, open the `ui/index.html` file in your browser. The html file loads the minified code from the `dist` folder.
