@@ -7,6 +7,8 @@ const { SystemLandscape, SystemNode: Node } = SystemMapper.Graph;
 const Renderer = SystemMapper.Renderer;
 const { View, SingleLayerView, SingleLayerTreeMapView } = SystemMapper.Views;
 
+let currentViewValue = viewSelect.value;
+
 const sl = new SystemLandscape();
 
 sl.addSystem('Server 1', { type: 'hardware' });
@@ -296,12 +298,11 @@ function updateViewOptions() {
 updateViewOptions();
 const renderer = new Renderer(sl, { view: views[viewSelect.value], container: graphContainer });
 
-const currentViewValue = viewSelect.value;
 function changeView() {
 	if (currentViewValue === viewSelect.value) return;
 
-	const view = views[viewSelect.value];
-	renderer.changeView(view);
+	currentViewValue = viewSelect.value;
+	renderer.changeView(views[viewSelect.value]);
 }
 
 renderer.run();

@@ -47,17 +47,24 @@ class Coordinate {
 
 	/**
 	 * Instance a Rectangle from this Coordinate.
-	 * @param {number} width Width of the area to be covered by the rectangle.
-	 * @param {number} height Height of the area to be covered by the rectangle.
-	 * @param {boolean} center Whether to center the rectangle on the current coordinate; otherwise this coordinate is the rectangle's top-left corner. Defaults to false.
+	 * @param {number} x Additional x-value. If `pos` isn't changed, this value is the width of the rectangle. Otherwise, if `tr` or `br` is chosen, this value determines the x-offset of the rectangle. Defaults to 0.
+	 * @param {number} y Additional y-value. If `pos` isn't changed, this value is the height of the rectangle. Otherwise, if `bl` or `br` is chosen, this value determines the y-offset of the rectangle. Defaults to 0.
+	 * @param {'c'|'tl'|'tr'|'bl'|'br'} pos Determines the position of this coordinate in the new rectangle. `c` stands for "center", `tl`, `tr`, `bl`, `br` stand for "top-left", "top-right", "bottom-left", "bottom-right", respectively. Defaults to `tl`.
 	 * @returns {Rectangle}
 	 */
-	rect(width, height, center = false) {
+	rect(x = 0, y = 0, pos = 'tl') {
 		const Rectangle = require('./Rectangle');
-		if (center) {
-			return new Rectangle(this.x - width / 2, this.y - height / 2, width, height);
-		} else {
-			return new Rectangle(this.x, this.y, width, height);
+		switch (pos) {
+			case 'tl':
+				return new Rectangle(this.x, this.y, x, y);
+			case 'tr':
+				return new Rectangle(x, this.y, this.x, y);
+			case 'bl':
+				return new Rectangle(this.x, y, x, this.y);
+			case 'br':
+				return new Rectangle(x, y, this.x, this.y);
+			case 'c':
+				return new Rectangle(this.x - x / 2, this.y - y / 2, x, y);
 		}
 	}
 

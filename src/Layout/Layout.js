@@ -2,11 +2,13 @@ const Coordinate = require('../Geom/Coordinate');
 const Rectangle = require('../Geom/Rectangle');
 
 class Layout {
-	constructor() {
+	constructor(nodeWidth, nodeHeight) {
 		// TODO: Implement Layouts as classes
 		// with the base class positioning nodes randomly
 		// and with extended Layouts being able to use
 		// many of the base functions defined here
+		this.nodeWidth = nodeWidth;
+		this.nodeHeight = nodeHeight;
 	}
 
 	/**
@@ -67,8 +69,11 @@ class Layout {
 
 			let val = null;
 			do {
-				let x = Math.floor(Math.random() * rect.width) + rect.left + w;
-				let y = Math.floor(Math.random() * rect.height) + rect.top + h;
+				// this.isNodePosInMaxSize() doesn't have to be checked
+				// bcause the x,y coordinates are calculated in a way,
+				// that they can't be outside the maxRect
+				let x = Math.floor(Math.random() * (rect.width - nodeWidth)) + rect.left + w;
+				let y = Math.floor(Math.random() * (rect.height - nodeHeight)) + rect.top + h;
 				val = new Coordinate(x, y);
 			} while (this.areNodesOverlapping(val, nodeWidth, nodeHeight, nodePositions));
 			nodePositions.set(id, val);

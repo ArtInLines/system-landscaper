@@ -198,10 +198,10 @@ class Renderer extends EventManager {
 	}
 
 	/**
-	 * Only used in the constructor to set the maxSize
+	 * Get a Coordinate for the maxSize. If the input is set to null (default), then the maxSize will be calculated from the container-element's size. Otherwise, if the input is a Coordinate, object or Array, the coordinates will stay the same. This function always returns an instance of a Coordinate
 	 * @returns {Coordinate}
 	 */
-	_setMaxSizeHelper(obj) {
+	_setMaxSizeHelper(obj = null) {
 		if (obj === null) return new Coordinate(this.container.clientWidth, this.container.clientHeight);
 		if (obj instanceof Coordinate) return obj;
 		let x = obj?.x ?? obj[0];
@@ -233,8 +233,8 @@ class Renderer extends EventManager {
 
 		this.nodePositions = this.Layout.layout(this.getVisibleNodes(), this.view.grouping, this.nodePositions, this.maxRect, this.nodeWidth, this.nodeHeight);
 
-		timer(this._render.bind(this), this.frameInterval);
-		// this._render();
+		// timer(this._render.bind(this), this.frameInterval);
+		this._render();
 	}
 
 	/**
@@ -244,11 +244,11 @@ class Renderer extends EventManager {
 	changeView(View) {
 		this._rmViewListeners();
 		this.view = View.init(this.graph);
+		this.zoomFactor = 1;
+		this.offset = new Coordinate(0, 0);
+		this._transform();
 		this._resetVisible();
 		this._setViewListeners();
-		// TODO:
-		// Calculate new Positions
-		// Render new Graph
 	}
 
 	_setViewListeners() {
@@ -339,6 +339,9 @@ class Renderer extends EventManager {
 
 		// Apply new scale matrix & update properties
 		this.zoomFactor = t.a;
+		// this.maxRect.width = this.maxSize.x / t.a;
+		// this.maxRect.height = this.maxSize.y / t.a;
+		console.log({ zoomFactor: this.zoomFactor, maxRect: this.maxRect });
 		this.offset.update(t.e, t.f);
 		this._transform(t.a, 0, 0, t.d, t.e, t.f);
 	}
@@ -407,7 +410,7 @@ class Renderer extends EventManager {
 
 	_moveLineTo(line, point) {
 		let nodePos = this.nodePositions.get(line.nodeId);
-		let from = nodePos.rect(this.nodeWidth, this.nodeHeight, true).intersect(nodePos, point);
+		let from = nodePos.rect(this.nodeWidth, this.nodeHeight, 'c').intersect(nodePos, point);
 
 		if (from === null) return line;
 		line.setPath(from.x, from.y, point.x, point.y);
@@ -467,7 +470,7 @@ class Renderer extends EventManager {
 					for (let id of this.nodePositions.keys()) {
 						if (id !== node.id) {
 							let nodePos = this.nodePositions.get(id);
-							let t = nodePos.rect(this.nodeWidth, this.nodeHeight, true).isPointInside(p, insideRectRadius);
+							let t = nodePos.rect(this.nodeWidth, this.nodeHeight, 'c').isPointInside(p, insideRectRadius);
 							if (t) {
 								let source = this.graph.getSystem(node.id);
 								let target = this.graph.getSystem(id);
@@ -487,7 +490,7 @@ class Renderer extends EventManager {
 		const coord = this.Layout.layout([node], this.view.grouping, this.nodePositions, this.maxRect, this.nodeWidth, this.nodeHeight).get(node.id);
 		this.nodePositions.set(node.id, coord);
 		this.drawnNodes.set(node.id, nodeContainer);
-		this.svgContainer.appendChild(nodeContainer);
+		this.svgContainer.insertAdjacentElement('beforeend', nodeContainer);
 		this._render();
 	}
 
@@ -536,7 +539,7 @@ class Renderer extends EventManager {
 		edgeUI.addEventListener('dblclick', (e) => {
 			this.selectEdges(edge);
 		});
-		this.svgContainer.appendChild(edgeUI);
+		this.svgContainer.insertAdjacentElement('afterbegin', edgeUI);
 		this.drawnEdges.set(edge.id, edgeUI);
 		this._render();
 	}
@@ -547,8 +550,8 @@ class Renderer extends EventManager {
 			let edge = edgeUI.edge;
 			let sourceCoord = this.nodePositions.get(edge.source.id);
 			let targetCoord = this.nodePositions.get(edge.target.id);
-			let from = sourceCoord.rect(this.nodeWidth, this.nodeHeight, true).intersect(sourceCoord, targetCoord);
-			let to = targetCoord.rect(this.nodeWidth, this.nodeHeight, true).intersect(targetCoord, sourceCoord);
+			let from = sourceCoord.rect(this.nodeWidth, this.nodeHeight, 'c').intersect(sourceCoord, targetCoord);
+			let to = targetCoord.rect(this.nodeWidth, this.nodeHeight, 'c').intersect(targetCoord, sourceCoord);
 
 			edgeUI.setPath(from.x, from.y, to.x, to.y);
 		});
@@ -564,6 +567,8 @@ class Renderer extends EventManager {
 
 	_onResize() {
 		// TODO: Maybe add: this.updateCenter();
+		this.maxSize = this._setMaxSizeHelper(null);
+		this.maxRect = this.maxSize.rect(0, 0, 'br');
 		this._render();
 	}
 }

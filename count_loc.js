@@ -36,11 +36,14 @@ async function count_loc_of_dir(dirpath, recursive = true) {
 
 async function main() {
 	const a = await count_loc_of_dir(`${__dirname}/src`);
-	const b = await count_loc_of_dir(`${__dirname}/test`);
+	const b = await count_loc_of_dir(`${__dirname}/ui`);
+	const c = await count_loc_of_dir(`${__dirname}/test`);
+	const d = await count_loc_of_dir(__dirname, false);
+	const e = await count_loc_of_file(`${__dirname}/package-lock.json`);
 
-	console.log('The test directory has:', b, 'lines of code');
+	console.log('The ui directory has:', b, 'lines of code');
 	console.log('The src directory has:', a, 'lines of code');
-	console.log('In total, this project has:', a + b, 'lines of code');
+	console.log('In total, this project has:', a + b + c + d - e, 'lines of code');
 }
 
 main();
