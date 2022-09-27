@@ -1,11 +1,13 @@
+const SystemLandscape = require('./Graphs/SystemLandscape.js');
+const Renderer = require('./Renderer.js');
+const View = require('./Views/View.js');
+const SingleLayerView = require('./Views/SingleLayerView.js');
+const SingleLayerTreeMapView = require('./Views/SingleLayerTreeMapView');
+
 const graphContainer = document.getElementById('graph-root');
 const newNodeBtn = document.getElementById('btn-new');
 const viewSelect = document.getElementById('select-view');
 const sideBar = document.getElementById('sidebar');
-
-const { SystemLandscape, SystemNode: Node } = SystemMapper.Graph;
-const Renderer = SystemMapper.Renderer;
-const { View, SingleLayerView, SingleLayerTreeMapView } = SystemMapper.Views;
 
 let currentViewValue = viewSelect.value;
 
