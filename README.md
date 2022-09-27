@@ -4,11 +4,9 @@ This Repository is a fork from [VivaGraphJS](https://github.com/anvaka/VivaGraph
 
 ## Usage
 
-As of now, nothing should work yet and nothing has been tested yet lol.
+(To be done)
 
-However, the idea is to provide a single distributed file for the entire library. This library would then set a global variable for scripts to use. The advantage of this is that using this library doesn't require the use of any module bundlers and makes debugging much simpler that way. This is the same approach the original ngraph/VivaGraphJS library used.
-
-## API Specification for highest Abstraction Layer
+## API Specification for SystemLandscape
 
 #### Adding Data
 
@@ -129,11 +127,6 @@ However, the idea is to provide a single distributed file for the entire library
 
     -   The opposite of goBack()
     -   Only possible if no changes happened after goBack() was called
-
-### TO Remember when Implementing
-
--   Useful Error Messages should be built in from the beginning
--   Event System for every change should be built in
 
 ## Specifications for UI
 
