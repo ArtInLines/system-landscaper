@@ -13,16 +13,11 @@ const sl = new SystemLandscape();
 
 sl.addSystem('Server 1', { type: 'hardware' });
 sl.addSystem('Server 2', { type: 'hardware' });
-// sl.addSystem('Server 3', { type: 'hardware' });
 sl.addSystem('VM 1', { type: 'vm' }, 'Server 1');
 sl.addSystem('VM 2', { type: 'vm' }, 'Server 1');
 sl.addSystem('VM 3', { type: 'vm' }, 'Server 1');
 sl.addSystem('VM 4', { type: 'vm' }, 'Server 2');
 sl.addSystem('VM 5', { type: 'vm' }, 'Server 2');
-// sl.addSystem('VM 6', { type: 'vm' }, 'Server 3');
-// sl.addSystem('VM 7', { type: 'vm' }, 'Server 3');
-// sl.addSystem('VM 8', { type: 'vm' }, 'Server 3');
-// sl.addSystem('VM 9', { type: 'vm' }, 'Server 3');
 sl.addSystem('DB 1', { type: 'db' }, 'VM 1');
 sl.addSystem('DB 2', { type: 'db' }, 'VM 1');
 sl.addSystem('Software 1', { type: 'software' }, 'VM 2');
