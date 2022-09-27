@@ -341,7 +341,7 @@ class Renderer extends EventManager {
 		this.zoomFactor = t.a;
 		// this.maxRect.width = this.maxSize.x / t.a;
 		// this.maxRect.height = this.maxSize.y / t.a;
-		console.log({ zoomFactor: this.zoomFactor, maxRect: this.maxRect });
+		// console.log({ zoomFactor: this.zoomFactor, maxRect: this.maxRect });
 		this.offset.update(t.e, t.f);
 		this._transform(t.a, 0, 0, t.d, t.e, t.f);
 	}

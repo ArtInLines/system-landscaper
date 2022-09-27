@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-	entry: { index: './src/main.js' },
+	entry: { index: './src/ui.js' },
 	mode: 'development', // TODO: Set this to production eventually
 	module: {
 		rules: [
