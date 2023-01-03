@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-	entry: { index: './built/ui.js' },
+	entry: { index: './tsOut/ui.js' },
 	mode: 'development', // TODO: Set this to production eventually
 	module: {
 		rules: [

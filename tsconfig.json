@@ -1,9 +1,9 @@
 {
 	"extends": "@tsconfig/node18/tsconfig.json",
 	"include": ["src/**/*"],
-	"exclude": ["node_modules", "dist", "built"],
+	"exclude": ["node_modules", "dist", "tsOut", "docs"],
 	"compilerOptions": {
 		"allowJs": true,
-		"outDir": "./built"
+		"outDir": "./tsOut"
 	}
 }
