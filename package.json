@@ -1,19 +1,20 @@
 {
-	"name": "vivagraphjs",
-	"version": "0.0.0",
-	"description": "Graph Drawing Library",
-	"main": "src/viva",
+	"name": "system-landscaper",
+	"version": "0.1.1",
+	"description": "System Landscaper Library",
+	"main": "src/ui",
 	"directories": {
 		"doc": "docs"
 	},
 	"scripts": {
-		"build": "npx tsc && webpack --config webpack.config.js",
+		"build": "npm run docs && npx tsc && webpack --config webpack.config.js",
 		"dev1": "npx tsc --watch",
-		"dev2": "webpack --config webpack.config.js --watch"
+		"dev2": "webpack --config webpack.config.js --watch",
+		"docs": "npx tsc --declaration --allowJs --emitDeclarationOnly --outDir types"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/anvaka/VivaGraphJS.git"
+		"url": "git://github.com/artinlines/system-landscaper.git"
 	},
 	"keywords": [
 		"graph",
