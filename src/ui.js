@@ -97,7 +97,7 @@ window.onload((e) => {
 		return container;
 	}
 
-	function getDataListField(label, val = null, values, onChange) {
+	function getDataListField(label, val, values, onChange) {
 		let idCounter = getDataListField?.idCounter || 0;
 		const dataListId = `${idCounter}-data-list`;
 		idCounter++;

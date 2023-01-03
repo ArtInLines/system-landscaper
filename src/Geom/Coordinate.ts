@@ -1,12 +1,15 @@
 const randint = require('../Utils/random').randint;
 
+type PositionStates = 'c' | 'tl' | 'tr' | 'bl' | 'br';
+
 class Coordinate {
+	point: number[];
 	/**
 	 * Coordinates store x and y values.
 	 * @param {number} x x value. Defaults to 0.
 	 * @param {number} y y value. Defaults t 0.
 	 */
-	constructor(x, y) {
+	constructor(x: number, y: number) {
 		this.point = [x, y];
 	}
 
@@ -28,7 +31,7 @@ class Coordinate {
 	 * @param {function} callback Callback function, that receives the current x/y value and an index (0 or 1) indicating whether it's x or y. It should return a new x/y value. It is called once for x and once for y.
 	 * @returns {Coordinate} Returns this to allow for chaining
 	 */
-	map(callback) {
+	map(callback: Function) {
 		this.point = this.point.map((v, i) => callback(v, i));
 		return this;
 	}
@@ -39,7 +42,7 @@ class Coordinate {
 	 * @param {nmber} y new y value. Defaults to the new x value.
 	 * @returns {Coordinate} Returns this to allow for chaining
 	 */
-	update(x, y = x) {
+	update(x: number, y = x) {
 		this.x = x;
 		this.y = y;
 		return this;
@@ -52,7 +55,7 @@ class Coordinate {
 	 * @param {'c'|'tl'|'tr'|'bl'|'br'} pos Determines the position of this coordinate in the new rectangle. `c` stands for "center", `tl`, `tr`, `bl`, `br` stand for "top-left", "top-right", "bottom-left", "bottom-right", respectively. Defaults to `tl`.
 	 * @returns {Rectangle}
 	 */
-	rect(x = 0, y = 0, pos = 'tl') {
+	rect(x: number = 0, y: number = 0, pos: PositionStates = 'tl') {
 		const Rectangle = require('./Rectangle');
 		switch (pos) {
 			case 'tl':
@@ -76,9 +79,9 @@ class Coordinate {
 		return new Coordinate(this.point[0], this.point[1]);
 	}
 
-	static rand(maxX, maxY, exclude) {
-		const xVal = randint(maxX);
-		const yVal = randint(maxY);
+	static rand(maxX: number, maxY: number, exclude: Map<number, Coordinate> | null) {
+		let xVal = randint(maxX);
+		let yVal = randint(maxY);
 		if (exclude) {
 			while (exclude.has(xVal) && exclude.has(yVal)) {
 				xVal = randint(0, maxX);
