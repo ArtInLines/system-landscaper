@@ -7,7 +7,7 @@
 		"doc": "docs"
 	},
 	"scripts": {
-		"build": "npm run docs && npx tsc && webpack --config webpack.config.js",
+		"build": "npx tsc && npm run docs && webpack --config webpack.config.js",
 		"dev1": "npx tsc --watch",
 		"dev2": "webpack --config webpack.config.js --watch",
 		"docs": "npx tsc --declaration --allowJs --emitDeclarationOnly --outDir types"
