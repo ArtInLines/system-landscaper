@@ -1,6 +1,6 @@
 window.onload((e) => {
 	const SystemLandscape = require('./Graphs/SystemLandscape.js');
-	const Renderer = require('./Renderer.js');
+	const Renderer = require('./renderer.js');
 	const View = require('./Views/View.js');
 	const SingleLayerView = require('./Views/SingleLayerView.js');
 	const SingleLayerTreeMapView = require('./Views/SingleLayerTreeMapView');
@@ -35,9 +35,9 @@ window.onload((e) => {
 
 	sl.linkSystems('DB 1', 'Software 1');
 
-	newNodeBtn.addEventListener('click', (e) => addNewNode(e));
-	viewSelect.addEventListener('click', (e) => updateViewOptions(e));
-	viewSelect.addEventListener('change', (e) => changeView(e));
+	newNodeBtn.addEventListener('click', (_) => addNewNode());
+	viewSelect.addEventListener('click', (_) => updateViewOptions());
+	viewSelect.addEventListener('change', (_) => changeView());
 
 	function getDefaultNodeData(node = null) {
 		return {

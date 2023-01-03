@@ -1,13 +1,12 @@
 const path = require('path');
 
 module.exports = {
-	entry: { index: './src/ui.js' },
+	entry: { index: './built/ui.js' },
 	mode: 'development', // TODO: Set this to production eventually
 	module: {
 		rules: [
 			{
 				test: /\.m?js$/,
-				exclude: /node_modules/,
 				exclude: /node_modules/,
 				use: {
 					loader: 'babel-loader',
