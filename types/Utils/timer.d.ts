@@ -1,12 +1,11 @@
 /**
- * Timer that fires callback with given interval (in ms) until
- * callback returns true;
+ * @author Andrei Kashcha (aka anvaka) / https://github.com/anvaka
+ * @author ArtInLines / Updated to TypeScript + Minor changes (https://github.com/artinlines)
  */
-declare function _exports(callback: any): {
+export default function createTimer(): (callback: () => any) => {
     /**
      * Stops execution of the callback
      */
     stop: () => void;
     restart: () => void;
 };
-export = _exports;

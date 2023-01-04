@@ -1,2 +1,4 @@
-export = findElementPosition;
-declare function findElementPosition(obj: any): number[];
+/**
+ * Finds the absolute position of an element on a page
+ */
+export default function findElementPosition(obj: HTMLElement): [number, number];

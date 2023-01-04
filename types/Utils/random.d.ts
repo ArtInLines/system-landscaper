@@ -4,4 +4,4 @@
  * @param {number} start Defaults to 0.
  * @returns {number}
  */
-export function randint(end: number, start?: number): number;
+export default function randint(end: number, start?: number): number;

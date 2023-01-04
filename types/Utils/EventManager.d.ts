@@ -1,8 +1,12 @@
-export = EventManager;
-declare class EventManager {
-    events: {};
-    on(event: any, callback: any): EventManager;
-    once(event: any, callback: any): EventManager;
-    off(event?: null, callback?: null): EventManager;
-    emit(event: any, ...args: any[]): EventManager | undefined;
+export type EventCallback = (...args: any[]) => void;
+export type EventsMap = {
+    [index: string]: EventCallback[];
+};
+export default class EventManager {
+    events: EventsMap;
+    constructor();
+    on(event: string, callback?: null | EventCallback): this;
+    once(event: string, callback: null | EventCallback): this | undefined;
+    off(event?: string | null, callback?: null | EventCallback): this;
+    protected emit(event: string, ...args: any[]): this | undefined;
 }

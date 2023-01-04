@@ -1,32 +1,27 @@
-export = NodeGroup;
-declare class NodeGroup {
+import SystemNode from './SystemNode';
+import { ID } from '../Utils/id';
+/**
+ * @typedef {Object} GroupData
+ */
+type GroupData = object;
+export default class NodeGroup {
+    id: ID;
+    name: string;
+    data: GroupData;
+    nodes: SystemNode[];
+    groups: NodeGroup[];
+    parentGroup: null | NodeGroup;
     /**
      * Create a Group of Nodes. A group can contain further groups as well as direct children.
      * @param {String} name Name of the group
      * @param {GroupData} data Data associated with the group
      * @param {SystemNode[]} nodes Direct Children-Nodes of this group
      */
-    constructor(id?: number, name?: string, data?: GroupData, nodes?: SystemNode[]);
-    /** @type {number} */
-    id: number;
-    /** @type {String} */
-    name: string;
-    /** @type {GroupData} */
-    data: GroupData;
-    /** @type {SystemNode[]} */
-    nodes: SystemNode[];
-    /** @type {NodeGroup[]} */
-    groups: NodeGroup[];
-    /** @type {?NodeGroup} */
-    parentGroup: NodeGroup | null;
-    findSubGroup(cb: any): any;
-    addNodes(...nodes: any[]): this;
-    addGroups(...groups: any[]): this;
-    removeNode(node: any): any;
-    removeSubGroup(id: any): any;
+    constructor(id?: ID, name?: null | string, data?: GroupData, nodes?: null | SystemNode[]);
+    findSubGroup(cb: (this: void, value: NodeGroup, index?: number, obj?: NodeGroup[]) => boolean): NodeGroup | null;
+    addNodes(...nodes: SystemNode[]): this;
+    addGroups(...groups: NodeGroup[]): this;
+    removeNode(node: SystemNode): SystemNode | null;
+    removeSubGroup(id: ID): NodeGroup | null;
 }
-declare namespace NodeGroup {
-    export { GroupData };
-}
-type GroupData = Object;
-import SystemNode = require("./SystemNode");
+export {};

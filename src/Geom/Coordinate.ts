@@ -1,8 +1,9 @@
-const randint = require('../Utils/random').randint;
+import randint from '../Utils/random';
+import Rectangle from './Rectangle';
 
 type PositionStates = 'c' | 'tl' | 'tr' | 'bl' | 'br';
 
-class Coordinate {
+export default class Coordinate {
 	point: number[];
 	/**
 	 * Coordinates store x and y values.
@@ -31,7 +32,7 @@ class Coordinate {
 	 * @param {function} callback Callback function, that receives the current x/y value and an index (0 or 1) indicating whether it's x or y. It should return a new x/y value. It is called once for x and once for y.
 	 * @returns {Coordinate} Returns this to allow for chaining
 	 */
-	map(callback: Function) {
+	map(callback: Function): Coordinate {
 		this.point = this.point.map((v, i) => callback(v, i));
 		return this;
 	}
@@ -55,8 +56,7 @@ class Coordinate {
 	 * @param {'c'|'tl'|'tr'|'bl'|'br'} pos Determines the position of this coordinate in the new rectangle. `c` stands for "center", `tl`, `tr`, `bl`, `br` stand for "top-left", "top-right", "bottom-left", "bottom-right", respectively. Defaults to `tl`.
 	 * @returns {Rectangle}
 	 */
-	rect(x: number = 0, y: number = 0, pos: PositionStates = 'tl') {
-		const Rectangle = require('./Rectangle');
+	rect(x: number = 0, y: number = 0, pos: PositionStates = 'tl'): Rectangle {
 		switch (pos) {
 			case 'tl':
 				return new Rectangle(this.x, this.y, x, y);
@@ -75,11 +75,11 @@ class Coordinate {
 	 * Copy the Coordinate to a new instance.
 	 * @returns {Coordinate}
 	 */
-	copy() {
+	copy(): Coordinate {
 		return new Coordinate(this.point[0], this.point[1]);
 	}
 
-	static rand(maxX: number, maxY: number, exclude: Map<number, Coordinate> | null) {
+	static rand(maxX: number, maxY: number, exclude: Map<number, Coordinate> | null): Coordinate {
 		let xVal = randint(maxX);
 		let yVal = randint(maxY);
 		if (exclude) {
@@ -91,5 +91,3 @@ class Coordinate {
 		return new Coordinate(xVal, yVal);
 	}
 }
-
-module.exports = Coordinate;

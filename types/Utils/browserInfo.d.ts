@@ -1,2 +1,4 @@
-export const browser: string;
-export const version: string;
+export default function browserInfo(): {
+    browser: string;
+    version: string;
+};

@@ -1,14 +1,9 @@
-export = Change;
-declare class Change {
-    /**
-     *
-     * @param {'add'|'remove'|'update'} type
-     * @param {any} el
-     * @param {?String|Sring[]} keys
-     */
-    constructor(type: 'add' | 'remove' | 'update', el: any, keys?: (string | Sring[]) | null);
-    type: "update" | "add" | "remove";
-    el: any;
-    keys: string | Sring[] | null;
+export type ChangeKind = 'remove' | 'add' | 'update';
+export type ChangeKeys = null | string | string[];
+export default class Change<T> {
+    type: ChangeKind;
+    el: T;
+    keys: ChangeKeys;
+    constructor(type: ChangeKind, el: T, keys?: ChangeKeys);
     getData(): any;
 }

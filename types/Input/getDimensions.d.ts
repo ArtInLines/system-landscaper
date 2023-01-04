@@ -1,7 +1,6 @@
-export = getDimension;
-declare function getDimension(container: any): {
+export default function getDimension(container: HTMLElement | null | undefined): {
     left: number;
     top: number;
-    width: any;
-    height: any;
+    width: number;
+    height: number;
 };

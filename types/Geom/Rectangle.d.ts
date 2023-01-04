@@ -1,50 +1,50 @@
-export = Rectangle;
-declare class Rectangle {
-    constructor(x: any, y: any, width: any, height: any);
-    x: any;
-    y: any;
-    width: any;
-    height: any;
-    set left(arg: any);
-    get left(): any;
-    set right(arg: any);
-    get right(): any;
-    set top(arg: any);
-    get top(): any;
-    set bottom(arg: any);
-    get bottom(): any;
-    /**	@param {Coordinate} coord */
-    set center(arg: Coordinate);
+import Coordinate from './Coordinate';
+export default class Rectangle {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, width: number, height: number);
+    get left(): number;
+    set left(x: number);
+    get right(): number;
+    set right(x: number);
+    get top(): number;
+    set top(y: number);
+    get bottom(): number;
+    set bottom(y: number);
     get center(): Coordinate;
-    set centerX(arg: any);
-    get centerX(): any;
-    set centerY(arg: any);
-    get centerY(): any;
     /**	@param {Coordinate} coord */
-    set topLeft(arg: Coordinate);
+    set center(coord: Coordinate);
+    get centerX(): number;
+    set centerX(newX: number);
+    get centerY(): number;
+    set centerY(newY: number);
     get topLeft(): Coordinate;
     /**	@param {Coordinate} coord */
-    set topRight(arg: Coordinate);
+    set topLeft(coord: Coordinate);
     get topRight(): Coordinate;
     /**	@param {Coordinate} coord */
-    set bottomLeft(arg: Coordinate);
+    set topRight(coord: Coordinate);
     get bottomLeft(): Coordinate;
     /**	@param {Coordinate} coord */
-    set bottomRight(arg: Coordinate);
+    set bottomLeft(coord: Coordinate);
     get bottomRight(): Coordinate;
     /**	@param {Coordinate} coord */
-    set topCenter(arg: Coordinate);
+    set bottomRight(coord: Coordinate);
     get topCenter(): Coordinate;
     /**	@param {Coordinate} coord */
-    set bottomCenter(arg: Coordinate);
+    set topCenter(coord: Coordinate);
     get bottomCenter(): Coordinate;
     /**	@param {Coordinate} coord */
-    set leftCenter(arg: Coordinate);
+    set bottomCenter(coord: Coordinate);
     get leftCenter(): Coordinate;
     /**	@param {Coordinate} coord */
-    set rightCenter(arg: Coordinate);
+    set leftCenter(coord: Coordinate);
     get rightCenter(): Coordinate;
-    intersect(p1: any, p2: any): any;
-    isPointInside(p: any, radius?: number): boolean;
-    resize(factor: any): void;
+    /**	@param {Coordinate} coord */
+    set rightCenter(coord: Coordinate);
+    intersect(p1: Coordinate, p2: Coordinate): any;
+    isPointInside(p: Coordinate, radius?: number): boolean;
+    resize(factor: number): void;
 }

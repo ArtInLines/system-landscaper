@@ -1,11 +1,8 @@
-export = Trie;
-declare class Trie {
-    /** @type {String[]} */
+export default class Trie<T> {
     chars: string[];
-    /** @type {Trie[]} */
-    tries: Trie[];
-    /** @type {any} */
-    val: any;
+    tries: Trie<T>[];
+    val: T | null;
+    constructor();
     /**
      * Check if this Node is empty - i.e. has no children and no value and is therefore ready to be removed.
      * @returns {boolean}
@@ -20,16 +17,16 @@ declare class Trie {
     /**
      * Find the value associated with the name `str`
      * @param {String} str Name of the Node
-     * @returns {?any} If the Node doesn't exist, `null` is returned
+     * @returns {?T} If the Node doesn't exist, `null` is returned
      */
-    find(str: string): any | null;
+    find(str: string): T | null;
     /**
      * Insert a new value associated with some name
      * @param {String} str Name of the Node
      * @param {any} val Value to associate with the name `str`
      * @returns {Trie} Returns this Trie to allow chained calls
      */
-    insert(str: string, val: any): Trie;
+    insert(str: string, val: T): this;
     /**
      * Remove the Node associated with `str`
      * @param {String} str Name of the Node
@@ -37,10 +34,23 @@ declare class Trie {
      */
     delete(str: string): boolean;
     /**
+     * Auxiliary function for replacePrefix()
+     * @param {String} str
+     * @param {String} prefix
+     * @returns {String[]}
+     */
+    protected allKeys(str: string, prefix?: string): string[];
+    /**
+     * Auxiliary function for findPrefix()
+     * @param {String} str
+     * @param {String} prefix
+     * @returns {String[]}
+     */
+    protected replacePrefix(str: string, prefix?: string): string[];
+    /**
      * Find all keys in this Trie that start with `str`
      * @param {String} str Prefix to search for
      * @returns {String[]} Returns all valid names in the Trie that start with `str`
      */
     findPrefix(str: string): string[];
-    #private;
 }

@@ -1,24 +1,24 @@
-const path = require('path');
+const { resolve } = require('path');
 
 module.exports = {
-	entry: { index: './tsOut/ui.js' },
-	mode: 'development', // TODO: Set this to production eventually
+	entry: { index: './src/ui.ts' },
+	mode: 'development',
 	module: {
 		rules: [
 			{
-				test: /\.m?js$/,
+				test: /\.ts$/,
 				exclude: /node_modules/,
 				use: {
-					loader: 'babel-loader',
-					options: {
-						presets: [['@babel/preset-env', { targets: 'defaults' }]],
-					},
+					loader: 'ts-loader',
 				},
 			},
 		],
 	},
+	resolve: {
+		extensions: ['.ts', '.js'],
+	},
 	output: {
-		path: path.resolve(__dirname, 'dist'),
+		path: resolve(__dirname, 'dist'),
 		filename: 'main.js',
 		environment: {
 			arrowFunction: false,

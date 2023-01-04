@@ -1,2 +1,2 @@
-declare function _exports(): number;
-export = _exports;
+export type ID = number;
+export default function newID(): ID;

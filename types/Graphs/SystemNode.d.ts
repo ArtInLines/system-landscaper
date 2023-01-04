@@ -1,21 +1,26 @@
-export = SystemNode;
-declare class SystemNode extends Tree {
+import { ID } from '../Utils/id';
+import Tree from '../Utils/Tree';
+import Edge from './Edge';
+import SystemTree from './SystemTree';
+export type EdgeAddedEv = [Edge];
+export type EdgeRemovedEv = [Edge];
+export type SystemTreeChangedEv = [SystemTree, SystemNode];
+export default class SystemNode extends Tree {
+    name: string;
+    systemTree: null | SystemTree;
+    edgesToChildren: Edge[];
+    parent: SystemNode;
+    children: SystemNode[];
     /**
      * Create a new SystemNode. SystemNodes represent single systems in a tree-like hierachy of systems. To connect several systems (or systemTrees) together, you need to use the SystemLandscape class.
      * @param {?SystemNode} parent The parent of this tree-node
      * @param {any} data Data associated with this node
      */
-    constructor(name?: null, parent?: SystemNode | null, data?: any);
-    name: any;
-    systemTree: any;
-    edgesToChildren: any[];
-    /** @type {?SystemNode} (For documentation only, remove this and use typescript type-annotations instead in the future) */
-    parent: SystemNode | null;
-    getEdge(toId: any): any;
-    getVerticalLinks(includeLinkFromParent?: boolean): any[];
-    changeSystemTree(systemTree: any): void;
-    addChild(child: any): any;
-    removeChild(id: any): Tree | null;
-    remove(): SystemNode;
+    constructor(name?: string | null | undefined, parent?: null | SystemNode, data?: object);
+    getEdge(toId: ID): Edge | undefined;
+    getVerticalLinks(includeLinkFromParent?: boolean): Edge[];
+    changeSystemTree(systemTree: SystemTree | null): void;
+    addChild(child: SystemNode): SystemNode;
+    removeChild(id: ID): SystemNode | null;
+    remove(): this;
 }
-import Tree = require("../Utils/Tree");

@@ -1,6 +1,6 @@
-declare const randint: any;
+import Rectangle from './Rectangle';
 type PositionStates = 'c' | 'tl' | 'tr' | 'bl' | 'br';
-declare class Coordinate {
+export default class Coordinate {
     point: number[];
     /**
      * Coordinates store x and y values.
@@ -17,7 +17,7 @@ declare class Coordinate {
      * @param {function} callback Callback function, that receives the current x/y value and an index (0 or 1) indicating whether it's x or y. It should return a new x/y value. It is called once for x and once for y.
      * @returns {Coordinate} Returns this to allow for chaining
      */
-    map(callback: Function): this;
+    map(callback: Function): Coordinate;
     /**
      * Update both values at once. This is a pure convenience function.
      * @param {number} x new x value
@@ -32,7 +32,7 @@ declare class Coordinate {
      * @param {'c'|'tl'|'tr'|'bl'|'br'} pos Determines the position of this coordinate in the new rectangle. `c` stands for "center", `tl`, `tr`, `bl`, `br` stand for "top-left", "top-right", "bottom-left", "bottom-right", respectively. Defaults to `tl`.
      * @returns {Rectangle}
      */
-    rect(x?: number, y?: number, pos?: PositionStates): any;
+    rect(x?: number, y?: number, pos?: PositionStates): Rectangle;
     /**
      * Copy the Coordinate to a new instance.
      * @returns {Coordinate}
@@ -40,3 +40,4 @@ declare class Coordinate {
     copy(): Coordinate;
     static rand(maxX: number, maxY: number, exclude: Map<number, Coordinate> | null): Coordinate;
 }
+export {};
