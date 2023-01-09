@@ -1,8 +1,9 @@
 import { ID } from '../Utils/id';
 import EventManager from './EventManager';
+export type NodeData = any;
 export default class Tree extends EventManager {
     id: ID;
-    data: any;
+    data: NodeData;
     parent: null | Tree;
     children: Tree[];
     /**
@@ -10,7 +11,7 @@ export default class Tree extends EventManager {
      * @param {?Tree} parent The parent of this tree-node
      * @param {any} data Data associated with this node
      */
-    constructor(parent?: null | Tree, data?: any);
+    constructor(parent?: null | Tree, data?: NodeData | object);
     /**
      * Returns how many levels deep this node is in the tree.
      * @returns {Number}

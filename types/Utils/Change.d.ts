@@ -5,5 +5,5 @@ export default class Change<T> {
     el: T;
     keys: ChangeKeys;
     constructor(type: ChangeKind, el: T, keys?: ChangeKeys);
-    getData(): any;
+    getData(): T | any;
 }

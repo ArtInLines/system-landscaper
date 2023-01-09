@@ -12,7 +12,7 @@ export default class Change<T> {
 		this.keys = keys;
 	}
 
-	getData() {
+	getData(): T | any {
 		let data: T | any = this.el;
 		if (Array.isArray(this.keys)) {
 			this.keys.forEach((key) => {

@@ -1,9 +1,11 @@
 import newID, { ID } from '../Utils/id';
 import EventManager from './EventManager';
 
+export type NodeData = any;
+
 export default class Tree extends EventManager {
 	id: ID;
-	data: any;
+	data: NodeData;
 	parent: null | Tree;
 	children: Tree[];
 
@@ -12,7 +14,7 @@ export default class Tree extends EventManager {
 	 * @param {?Tree} parent The parent of this tree-node
 	 * @param {any} data Data associated with this node
 	 */
-	constructor(parent: null | Tree = null, data: any = {}) {
+	constructor(parent: null | Tree = null, data: NodeData | object = {}) {
 		super();
 		/** @type {Number} */
 		this.id = newID();

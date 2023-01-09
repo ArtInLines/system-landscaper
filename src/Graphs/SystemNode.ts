@@ -6,11 +6,13 @@ import SystemTree from './SystemTree';
 export type EdgeAddedEv = [Edge];
 export type EdgeRemovedEv = [Edge];
 export type SystemTreeChangedEv = [SystemTree, SystemNode];
+export type SystemData = any;
 
 export default class SystemNode extends Tree {
 	name: string;
 	systemTree: null | SystemTree;
 	edgesToChildren: Edge[];
+	declare data: SystemData;
 	declare parent: SystemNode;
 	declare children: SystemNode[];
 
@@ -19,7 +21,7 @@ export default class SystemNode extends Tree {
 	 * @param {?SystemNode} parent The parent of this tree-node
 	 * @param {any} data Data associated with this node
 	 */
-	constructor(name: string | null | undefined = null, parent: null | SystemNode = null, data: object = {}) {
+	constructor(name: string | null | undefined = null, parent: null | SystemNode = null, data: SystemData | object = {}) {
 		super(null, data);
 		this.name = name ?? this.id.toString(10);
 		this.systemTree = parent instanceof SystemNode ? parent.systemTree : null;

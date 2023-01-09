@@ -2,16 +2,17 @@ import EventManager from '../Utils/EventManager';
 import { ID } from '../Utils/id';
 import Edge from './Edge';
 import SystemNode from './SystemNode';
+export type SystemTreeData = any;
 export default class SystemTree extends EventManager {
     id: ID;
-    data: object;
+    data: SystemTreeData;
     root: null | SystemNode;
     /**
      * Create a new SystemTree object. SystemTrees store the tree-like structure of systems and allows easy interaction with them. This class also adds events to listen to changes in the tree.
      * @param {?SystemNode} root Root node of the systemTree.
      * @param {any} data Data to store with the systemTree.
      */
-    constructor(root?: null | SystemNode, data?: object);
+    constructor(root?: null | SystemNode, data?: SystemTreeData | object);
     get height(): number;
     isEmpty(): boolean;
     getSystems(startLayer?: number, endLayer?: number): SystemNode[];

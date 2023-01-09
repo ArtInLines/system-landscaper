@@ -5,10 +5,12 @@ import SystemTree from './SystemTree';
 export type EdgeAddedEv = [Edge];
 export type EdgeRemovedEv = [Edge];
 export type SystemTreeChangedEv = [SystemTree, SystemNode];
+export type SystemData = any;
 export default class SystemNode extends Tree {
     name: string;
     systemTree: null | SystemTree;
     edgesToChildren: Edge[];
+    data: SystemData;
     parent: SystemNode;
     children: SystemNode[];
     /**
@@ -16,7 +18,7 @@ export default class SystemNode extends Tree {
      * @param {?SystemNode} parent The parent of this tree-node
      * @param {any} data Data associated with this node
      */
-    constructor(name?: string | null | undefined, parent?: null | SystemNode, data?: object);
+    constructor(name?: string | null | undefined, parent?: null | SystemNode, data?: SystemData | object);
     getEdge(toId: ID): Edge | undefined;
     getVerticalLinks(includeLinkFromParent?: boolean): Edge[];
     changeSystemTree(systemTree: SystemTree | null): void;

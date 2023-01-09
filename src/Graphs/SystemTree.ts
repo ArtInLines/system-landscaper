@@ -11,9 +11,11 @@ import SystemNode from './SystemNode';
 // Problem with that is the difficult use of "this":
 // https://stackoverflow.com/a/20279485/13764271
 
+export type SystemTreeData = any;
+
 export default class SystemTree extends EventManager {
 	id: ID;
-	data: object;
+	data: SystemTreeData;
 	root: null | SystemNode;
 
 	/**
@@ -21,7 +23,7 @@ export default class SystemTree extends EventManager {
 	 * @param {?SystemNode} root Root node of the systemTree.
 	 * @param {any} data Data to store with the systemTree.
 	 */
-	constructor(root: null | SystemNode = null, data: object = {}) {
+	constructor(root: null | SystemNode = null, data: SystemTreeData | object = {}) {
 		super();
 		this.id = newID();
 		this.data = data || {};
